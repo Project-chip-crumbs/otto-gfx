@@ -41,6 +41,14 @@ static VGCapStyle fromNSVG(NSVGlineCap cap) {
   }
 }
 
+static VGPaint createPaintFromRGBA(float r, float g, float b, float a) {
+  auto paint = vgCreatePaint();
+  VGfloat color[] = { r, g, b, a };
+  vgSetParameteri(paint, VG_PAINT_TYPE, VG_PAINT_TYPE_COLOR);
+  vgSetParameterfv(paint, VG_PAINT_COLOR, 4, color);
+  return paint;
+}
+
 static VGPaint createPaintFromNSVGpaint(const NSVGpaint &svgPaint, float opacity = 1.0f) {
   auto paint = vgCreatePaint();
 
@@ -94,6 +102,18 @@ void fillPaint(const NSVGpaint &svgPaint, float opacity) {
   vgDestroyPaint(paint);
 }
 
+void strokeColor(float r, float g, float b, float a) {
+  auto paint = createPaintFromRGBA(r, g, b, a);
+  vgSetPaint(paint, VG_STROKE_PATH);
+  vgDestroyPaint(paint);
+}
+
+void fillColor(float r, float g, float b, float a) {
+  auto paint = createPaintFromRGBA(r, g, b, a);
+  vgSetPaint(paint, VG_FILL_PATH);
+  vgDestroyPaint(paint);
+}
+
 void strokeWidth(VGfloat width) {
   vgSetf(VG_STROKE_LINE_WIDTH, width);
 }
@@ -107,7 +127,13 @@ void strokeJoin(VGJoinStyle join) {
 }
 
 void moveTo(VGPath path, float x, float y) {
-  VGubyte segs[]   = { VG_MOVE_TO_ABS };
+  VGubyte segs[] = { VG_MOVE_TO_ABS };
+  VGfloat coords[] = { x, y };
+  vgAppendPathData(path, 1, segs, coords);
+}
+
+void lineTo(VGPath path, float x, float y) {
+  VGubyte segs[] = { VG_LINE_TO_ABS };
   VGfloat coords[] = { x, y };
   vgAppendPathData(path, 1, segs, coords);
 }
