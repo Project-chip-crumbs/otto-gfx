@@ -1,5 +1,8 @@
 #include "gfx.hpp"
 
+#define NANOSVG_IMPLEMENTATION
+#include "nanosvg.h"
+
 namespace otto {
 
 static void unpackRGB(uint32_t color, float &r, float &g, float &b) {
