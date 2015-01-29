@@ -1,5 +1,7 @@
 #include "gfx.hpp"
 
+#include <VG/vgu.h>
+
 #define NANOSVG_IMPLEMENTATION
 #include "nanosvg.h"
 
@@ -90,6 +92,7 @@ static VGPaint createPaintFromNSVGpaint(const NSVGpaint &svgPaint, float opacity
   return paint;
 }
 
+
 void strokePaint(const NSVGpaint &svgPaint, float opacity) {
   auto paint = createPaintFromNSVGpaint(svgPaint, opacity);
   vgSetPaint(paint, VG_STROKE_PATH);
@@ -126,6 +129,7 @@ void strokeJoin(VGJoinStyle join) {
   vgSeti(VG_STROKE_JOIN_STYLE, join);
 }
 
+
 void moveTo(VGPath path, float x, float y) {
   VGubyte segs[] = { VG_MOVE_TO_ABS };
   VGfloat coords[] = { x, y };
@@ -139,10 +143,66 @@ void lineTo(VGPath path, float x, float y) {
 }
 
 void cubicTo(VGPath path, float x1, float y1, float x2, float y2, float x3, float y3) {
-  VGubyte segs[]   = { VG_CUBIC_TO };
+  VGubyte segs[] = { VG_CUBIC_TO };
   VGfloat coords[] = { x1, y1, x2, y2, x3, y3 };
   vgAppendPathData(path, 1, segs, coords);
 }
+
+static float RAD_TO_DEG = 180.0f / M_PI;
+
+void arc(VGPath path, float x, float y, float w, float h, float startAngle, float endAngle) {
+  float as = startAngle * RAD_TO_DEG;
+  float ae = (endAngle - startAngle) * RAD_TO_DEG;
+  vguArc(path, x, y, w, h, as, ae, VGU_ARC_OPEN);
+}
+
+
+//
+// Scratch Path Operators
+//
+
+static VGPath scratchPath = 0;
+
+void beginPath() {
+  if (scratchPath == VG_INVALID_HANDLE) {
+    scratchPath = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_F, 1.0f, 0.0f, 0, 0, VG_PATH_CAPABILITY_ALL);
+  }
+  else {
+    vgClearPath(scratchPath, VG_PATH_CAPABILITY_ALL);
+  }
+}
+
+void moveTo(float x, float y) {
+  moveTo(scratchPath, x, y);
+}
+
+void lineTo(float x, float y) {
+  lineTo(scratchPath, x, y);
+}
+
+void cubicTo(float x1, float y1, float x2, float y2, float x3, float y3) {
+  cubicTo(scratchPath, x1, y1, x2, y2, x3, y3);
+}
+
+void arc(float x, float y, float w, float h, float startAngle, float endAngle) {
+  arc(scratchPath, x, y, w, h, startAngle, endAngle);
+}
+
+void fill() {
+  vgDrawPath(scratchPath, VG_FILL_PATH);
+}
+
+void stroke() {
+  vgDrawPath(scratchPath, VG_STROKE_PATH);
+}
+
+void fillAndStroke() {
+  vgDrawPath(scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
+}
+
+//
+// SVG
+//
 
 void draw(const NSVGimage &svg) {
   for (auto shape = svg.shapes; shape != NULL; shape = shape->next) {
