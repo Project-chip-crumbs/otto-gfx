@@ -35,8 +35,10 @@ void lineTo(float x, float y);
 void lineTo(const glm::vec2 &pos);
 void cubicTo(float x1, float y1, float x2, float y2, float x3, float y3);
 void cubicTo(const glm::vec2 &p1, const glm::vec2 p2, const glm::vec2 &p3);
-void arc(float x, float y, float w, float h, float angleStart, float angleEnd);
+void arc(float cx, float cy, float w, float h, float angleStart, float angleEnd);
 void arc(const glm::vec2 &ctr, const glm::vec2 &size, float angleStart, float angleEnd);
+void circle(float cx, float cy, float radius);
+void circle(const glm::vec2 &ctr, float radius);
 
 void fill();
 void stroke();

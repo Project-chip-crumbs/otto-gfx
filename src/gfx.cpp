@@ -197,12 +197,21 @@ void cubicTo(const glm::vec2 &p1, const glm::vec2 p2, const glm::vec2 &p3) {
   cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
 }
 
-void arc(float x, float y, float w, float h, float angleStart, float angleEnd) {
-  arc(scratchPath, x, y, w, h, angleStart, angleEnd);
+void arc(float cx, float cy, float w, float h, float angleStart, float angleEnd) {
+  arc(scratchPath, cx, cy, w, h, angleStart, angleEnd);
 }
 void arc(const glm::vec2 &ctr, const glm::vec2 &size, float angleStart, float angleEnd) {
   arc(ctr.x, ctr.y, size.x, size.y, angleStart, angleEnd);
 }
+
+void circle(float cx, float cy, float radius) {
+  auto d = radius * 2.0f;
+  arc(cx, cy, d, d, 0.0f, M_PI * 2.0f);
+}
+void circle(const glm::vec2 &ctr, float radius) {
+  circle(ctr.x, ctr.y, radius);
+}
+
 
 void fill() {
   vgDrawPath(scratchPath, VG_FILL_PATH);
