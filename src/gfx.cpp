@@ -1,9 +1,13 @@
 #include "gfx.hpp"
-
-#include <VG/vgu.h>
+#define GLM_FORCE_RADIANS 1
+#include "gtx/matrix_transform_2d.hpp"
 
 #define NANOSVG_IMPLEMENTATION
 #include "nanosvg.h"
+
+#include <VG/vgu.h>
+#include <vector>
+#include <cmath>
 
 namespace otto {
 
@@ -200,6 +204,7 @@ void fillAndStroke() {
   vgDrawPath(scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
 }
 
+
 //
 // SVG
 //
@@ -234,6 +239,53 @@ void draw(const NSVGimage &svg) {
                        (hasStroke ? VG_STROKE_PATH : 0));
     vgDestroyPath(vgPath);
   }
+}
+
+void draw(const NSVGimage *img) {
+  draw(*img);
+}
+
+
+//
+// Stack
+//
+
+using namespace glm;
+
+static std::vector<mat3> transformStack = { mat3() };
+
+static void loadMatrix() {
+  vgLoadMatrix(&transformStack.back()[0][0]);
+}
+
+
+void pushTransform() {
+  transformStack.push_back(transformStack.back());
+}
+
+void popTransform() {
+  transformStack.pop_back();
+  loadMatrix();
+}
+
+void setTransform(const mat3 &xf) {
+  transformStack.back() = xf;
+  loadMatrix();
+}
+
+const mat3 getTransform() {
+  return transformStack.back();
+}
+
+
+void translate(const vec2 &vec) {
+  transformStack.back() = translate(transformStack.back(), vec);
+  loadMatrix();
+}
+
+void rotate(float radians) {
+  transformStack.back() = rotate(transformStack.back(), radians);
+  loadMatrix();
 }
 
 } // otto

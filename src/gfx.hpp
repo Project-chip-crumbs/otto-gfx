@@ -7,6 +7,8 @@
 #include <math.h>
 
 #include "nanosvg.h"
+#include "vec2.hpp"
+#include "mat3x3.hpp"
 
 namespace otto {
 
@@ -37,5 +39,14 @@ void stroke();
 void fillAndStroke();
 
 void draw(const NSVGimage &svg);
+void draw(const NSVGimage *svg);
+
+void pushTransform();
+void popTransform();
+void setTransform(const glm::mat3 &xf);
+const glm::mat3 getTransform();
+
+void translate(const glm::vec2 &vec);
+void rotate(float radians);
 
 } // otto
