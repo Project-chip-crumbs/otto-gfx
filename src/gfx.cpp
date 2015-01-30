@@ -179,17 +179,29 @@ void beginPath() {
 void moveTo(float x, float y) {
   moveTo(scratchPath, x, y);
 }
+void moveTo(const glm::vec2 &pos) {
+  moveTo(pos.x, pos.y);
+}
 
 void lineTo(float x, float y) {
   lineTo(scratchPath, x, y);
+}
+void lineTo(const glm::vec2 &pos) {
+  lineTo(pos.x, pos.y);
 }
 
 void cubicTo(float x1, float y1, float x2, float y2, float x3, float y3) {
   cubicTo(scratchPath, x1, y1, x2, y2, x3, y3);
 }
+void cubicTo(const glm::vec2 &p1, const glm::vec2 p2, const glm::vec2 &p3) {
+  cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+}
 
-void arc(float x, float y, float w, float h, float startAngle, float endAngle) {
-  arc(scratchPath, x, y, w, h, startAngle, endAngle);
+void arc(float x, float y, float w, float h, float angleStart, float angleEnd) {
+  arc(scratchPath, x, y, w, h, angleStart, angleEnd);
+}
+void arc(const glm::vec2 &ctr, const glm::vec2 &size, float angleStart, float angleEnd) {
+  arc(ctr.x, ctr.y, size.x, size.y, angleStart, angleEnd);
 }
 
 void fill() {
@@ -282,10 +294,23 @@ void translate(const vec2 &vec) {
   transformStack.back() = translate(transformStack.back(), vec);
   loadMatrix();
 }
+void translate(float x, float y) {
+  translate(vec2(x, y));
+}
 
 void rotate(float radians) {
   transformStack.back() = rotate(transformStack.back(), radians);
   loadMatrix();
+}
+
+void scale(const glm::vec2 &vec) {
+  transformStack.back() = scale(transformStack.back(), vec);
+}
+void scale(float x, float y) {
+  scale(vec2(x, y));
+}
+void scale(float s) {
+  scale(vec2(s));
 }
 
 } // otto
