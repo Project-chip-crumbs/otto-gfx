@@ -8,6 +8,8 @@
 
 #include "nanosvg.h"
 #include "vec2.hpp"
+#include "vec3.hpp"
+#include "vec4.hpp"
 #include "mat3x3.hpp"
 
 namespace otto {
@@ -16,7 +18,11 @@ void strokePaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 void fillPaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 
 void strokeColor(float r, float g, float b, float a = 1.0f);
+void strokeColor(const glm::vec4 &color);
+void strokeColor(const glm::vec3 &color);
 void fillColor(float r, float g, float b, float a = 1.0f);
+void fillColor(const glm::vec4 &color);
+void fillColor(const glm::vec3 &color);
 
 void strokeWidth(VGfloat width);
 void strokeCap(VGCapStyle cap);
@@ -43,6 +49,11 @@ void circle(const glm::vec2 &ctr, float radius);
 void fill();
 void stroke();
 void fillAndStroke();
+
+void clearColor(float r, float g, float b, float a = 1.0f);
+void clearColor(const glm::vec4 &color);
+void clearColor(const glm::vec3 &color);
+void clear(float x, float y, float w, float h);
 
 void draw(const NSVGimage &svg);
 void draw(const NSVGimage *svg);

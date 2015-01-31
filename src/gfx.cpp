@@ -114,11 +114,23 @@ void strokeColor(float r, float g, float b, float a) {
   vgSetPaint(paint, VG_STROKE_PATH);
   vgDestroyPaint(paint);
 }
+void strokeColor(const glm::vec4 &color) {
+  strokeColor(color.r, color.g, color.b, color.a);
+}
+void strokeColor(const glm::vec3 &color) {
+  strokeColor(color.r, color.g, color.b);
+}
 
 void fillColor(float r, float g, float b, float a) {
   auto paint = createPaintFromRGBA(r, g, b, a);
   vgSetPaint(paint, VG_FILL_PATH);
   vgDestroyPaint(paint);
+}
+void fillColor(const glm::vec4 &color) {
+  fillColor(color.r, color.g, color.b, color.a);
+}
+void fillColor(const glm::vec3 &color) {
+  fillColor(color.r, color.g, color.b);
 }
 
 void strokeWidth(VGfloat width) {
@@ -223,6 +235,22 @@ void stroke() {
 
 void fillAndStroke() {
   vgDrawPath(scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
+}
+
+
+void clearColor(float r, float g, float b, float a) {
+  VGfloat color[] = { r, g, b, a };
+  vgSetfv(VG_CLEAR_COLOR, 4, color);
+}
+void clearColor(const glm::vec4 &color) {
+  clearColor(color.r, color.g, color.b, color.a);
+}
+void clearColor(const glm::vec3 &color) {
+  clearColor(color.r, color.g, color.b);
+}
+
+void clear(float x, float y, float w, float h) {
+  vgClear(x, y, w, h);
 }
 
 
