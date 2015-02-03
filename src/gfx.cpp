@@ -342,6 +342,7 @@ void rotate(float radians) {
 
 void scale(const glm::vec2 &vec) {
   transformStack.back() = scale(transformStack.back(), vec);
+  loadMatrix();
 }
 void scale(float x, float y) {
   scale(vec2(x, y));
