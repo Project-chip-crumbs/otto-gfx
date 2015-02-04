@@ -2,12 +2,16 @@
 #define GLM_FORCE_RADIANS 1
 #include "gtx/matrix_transform_2d.hpp"
 
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 #define NANOSVG_IMPLEMENTATION
 #include "nanosvg.h"
 
 #include <VG/vgu.h>
 #include <vector>
 #include <cmath>
+#include <iostream>
 
 namespace otto {
 
@@ -349,6 +353,70 @@ void scale(float x, float y) {
 }
 void scale(float s) {
   scale(vec2(s));
+}
+
+
+//
+// Text
+//
+
+// NOTE(ryan): This is currently hardcoded to only support one font.
+
+#include "OCRAStd.inc"
+
+struct Font {
+  VGFont font;
+  const short *charMap;
+};
+
+static float fontSize = 35.0f;
+static Font defaultFont;
+
+void initFontOCRA() {
+  auto font = vgCreateFont(OCRAStd_glyphCount);
+
+  for (int i = 0; i < OCRAStd_glyphCount; ++i) {
+    auto path = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_S_32, 1.0f / 65536.0f, 0.0f,
+                             0, 0, VG_PATH_CAPABILITY_ALL);
+
+    auto instructionCount = OCRAStd_glyphInstructionCounts[i];
+    if (instructionCount > 0) {
+      auto points = &OCRAStd_glyphPoints[OCRAStd_glyphPointIndices[i] * 2];
+      auto instructions = &OCRAStd_glyphInstructions[OCRAStd_glyphInstructionIndices[i]];
+      vgAppendPathData(path, instructionCount, instructions, points);
+    }
+
+    VGfloat origin[] = { 0.0f, 0.0f };
+    VGfloat escapement[] = { OCRAStd_glyphAdvances[i] / 65536.0f, 0.0f };
+    vgSetGlyphToPath(font, i, path, VG_FALSE, origin, escapement);
+
+    vgDestroyPath(path);
+  }
+
+  defaultFont.font = font;
+  defaultFont.charMap = OCRAStd_characterMap;\
+}
+
+void text(const std::string &text) {
+  auto count = text.length();
+
+  VGuint indices[count];
+
+  for (int i = 0; i < count; ++i) {
+    auto c = text[i];
+    indices[i] = defaultFont.charMap[c];
+  }
+
+  VGfloat origin[] = { 0.0f, 0.0f };
+  vgSetfv(VG_GLYPH_ORIGIN, 2, origin);
+
+  vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
+  loadMatrix();
+  vgScale(fontSize, -fontSize);
+
+  vgDrawGlyphs(defaultFont.font, count, indices, nullptr, nullptr, VG_FILL_PATH, true);
+
+  vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
 }
 
 } // otto

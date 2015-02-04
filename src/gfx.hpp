@@ -2,9 +2,7 @@
 
 #include <VG/openvg.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include <string>
 
 #include "nanosvg.h"
 #include "vec2.hpp"
@@ -69,5 +67,8 @@ void rotate(float radians);
 void scale(const glm::vec2 &vec);
 void scale(float x, float y);
 void scale(float s);
+
+void initFontOCRA();
+void text(const std::string &text);
 
 } // otto
