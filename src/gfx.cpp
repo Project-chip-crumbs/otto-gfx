@@ -19,6 +19,23 @@
 
 namespace otto {
 
+using namespace glm;
+
+struct Context {
+  VGPath scratchPath = 0;
+
+  std::vector<mat3> transformStack = { mat3() };
+
+  VGFont font = VG_INVALID_HANDLE;
+  stbtt_fontinfo fontInfo;
+  float fontAscent, fontDescent, fontLineGap;
+  float fontSize = 14.0f;
+
+  uint32_t textAlign = ALIGN_LEFT | ALIGN_BASELINE;
+};
+
+static Context ctx;
+
 static void unpackRGB(uint32_t color, float &r, float &g, float &b) {
   r = (color         & 0xff) / 255.0f;
   g = ((color >> 8)  & 0xff) / 255.0f;
@@ -122,10 +139,10 @@ void strokeColor(float r, float g, float b, float a) {
   vgSetPaint(paint, VG_STROKE_PATH);
   vgDestroyPaint(paint);
 }
-void strokeColor(const glm::vec4 &color) {
+void strokeColor(const vec4 &color) {
   strokeColor(color.r, color.g, color.b, color.a);
 }
-void strokeColor(const glm::vec3 &color) {
+void strokeColor(const vec3 &color) {
   strokeColor(color.r, color.g, color.b);
 }
 
@@ -134,10 +151,10 @@ void fillColor(float r, float g, float b, float a) {
   vgSetPaint(paint, VG_FILL_PATH);
   vgDestroyPaint(paint);
 }
-void fillColor(const glm::vec4 &color) {
+void fillColor(const vec4 &color) {
   fillColor(color.r, color.g, color.b, color.a);
 }
-void fillColor(const glm::vec3 &color) {
+void fillColor(const vec3 &color) {
   fillColor(color.r, color.g, color.b);
 }
 
@@ -185,42 +202,41 @@ void arc(VGPath path, float x, float y, float w, float h, float startAngle, floa
 // Scratch Path Operators
 //
 
-static VGPath scratchPath = 0;
-
 void beginPath() {
-  if (scratchPath == VG_INVALID_HANDLE) {
-    scratchPath = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_F, 1.0f, 0.0f, 0, 0, VG_PATH_CAPABILITY_ALL);
+  if (ctx.scratchPath == VG_INVALID_HANDLE) {
+    ctx.scratchPath = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_F, 1.0f, 0.0f, 0, 0,
+                                   VG_PATH_CAPABILITY_ALL);
   }
   else {
-    vgClearPath(scratchPath, VG_PATH_CAPABILITY_ALL);
+    vgClearPath(ctx.scratchPath, VG_PATH_CAPABILITY_ALL);
   }
 }
 
 void moveTo(float x, float y) {
-  moveTo(scratchPath, x, y);
+  moveTo(ctx.scratchPath, x, y);
 }
-void moveTo(const glm::vec2 &pos) {
+void moveTo(const vec2 &pos) {
   moveTo(pos.x, pos.y);
 }
 
 void lineTo(float x, float y) {
-  lineTo(scratchPath, x, y);
+  lineTo(ctx.scratchPath, x, y);
 }
-void lineTo(const glm::vec2 &pos) {
+void lineTo(const vec2 &pos) {
   lineTo(pos.x, pos.y);
 }
 
 void cubicTo(float x1, float y1, float x2, float y2, float x3, float y3) {
-  cubicTo(scratchPath, x1, y1, x2, y2, x3, y3);
+  cubicTo(ctx.scratchPath, x1, y1, x2, y2, x3, y3);
 }
-void cubicTo(const glm::vec2 &p1, const glm::vec2 p2, const glm::vec2 &p3) {
+void cubicTo(const vec2 &p1, const vec2 p2, const vec2 &p3) {
   cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
 }
 
 void arc(float cx, float cy, float w, float h, float angleStart, float angleEnd) {
-  arc(scratchPath, cx, cy, w, h, angleStart, angleEnd);
+  arc(ctx.scratchPath, cx, cy, w, h, angleStart, angleEnd);
 }
-void arc(const glm::vec2 &ctr, const glm::vec2 &size, float angleStart, float angleEnd) {
+void arc(const vec2 &ctr, const vec2 &size, float angleStart, float angleEnd) {
   arc(ctr.x, ctr.y, size.x, size.y, angleStart, angleEnd);
 }
 
@@ -228,21 +244,21 @@ void circle(float cx, float cy, float radius) {
   auto d = radius * 2.0f;
   arc(cx, cy, d, d, 0.0f, M_PI * 2.0f);
 }
-void circle(const glm::vec2 &ctr, float radius) {
+void circle(const vec2 &ctr, float radius) {
   circle(ctr.x, ctr.y, radius);
 }
 
 
 void fill() {
-  vgDrawPath(scratchPath, VG_FILL_PATH);
+  vgDrawPath(ctx.scratchPath, VG_FILL_PATH);
 }
 
 void stroke() {
-  vgDrawPath(scratchPath, VG_STROKE_PATH);
+  vgDrawPath(ctx.scratchPath, VG_STROKE_PATH);
 }
 
 void fillAndStroke() {
-  vgDrawPath(scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
+  vgDrawPath(ctx.scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
 }
 
 
@@ -250,10 +266,10 @@ void clearColor(float r, float g, float b, float a) {
   VGfloat color[] = { r, g, b, a };
   vgSetfv(VG_CLEAR_COLOR, 4, color);
 }
-void clearColor(const glm::vec4 &color) {
+void clearColor(const vec4 &color) {
   clearColor(color.r, color.g, color.b, color.a);
 }
-void clearColor(const glm::vec3 &color) {
+void clearColor(const vec3 &color) {
   clearColor(color.r, color.g, color.b);
 }
 
@@ -307,36 +323,32 @@ void draw(const NSVGimage *img) {
 // Stack
 //
 
-using namespace glm;
-
-static std::vector<mat3> transformStack = { mat3() };
-
 static void loadMatrix() {
-  vgLoadMatrix(&transformStack.back()[0][0]);
+  vgLoadMatrix(&ctx.transformStack.back()[0][0]);
 }
 
 
 void pushTransform() {
-  transformStack.push_back(transformStack.back());
+  ctx.transformStack.push_back(ctx.transformStack.back());
 }
 
 void popTransform() {
-  transformStack.pop_back();
+  ctx.transformStack.pop_back();
   loadMatrix();
 }
 
 void setTransform(const mat3 &xf) {
-  transformStack.back() = xf;
+  ctx.transformStack.back() = xf;
   loadMatrix();
 }
 
 const mat3 getTransform() {
-  return transformStack.back();
+  return ctx.transformStack.back();
 }
 
 
 void translate(const vec2 &vec) {
-  transformStack.back() = translate(transformStack.back(), vec);
+  ctx.transformStack.back() = translate(ctx.transformStack.back(), vec);
   loadMatrix();
 }
 void translate(float x, float y) {
@@ -344,12 +356,12 @@ void translate(float x, float y) {
 }
 
 void rotate(float radians) {
-  transformStack.back() = rotate(transformStack.back(), radians);
+  ctx.transformStack.back() = rotate(ctx.transformStack.back(), radians);
   loadMatrix();
 }
 
-void scale(const glm::vec2 &vec) {
-  transformStack.back() = scale(transformStack.back(), vec);
+void scale(const vec2 &vec) {
+  ctx.transformStack.back() = scale(ctx.transformStack.back(), vec);
   loadMatrix();
 }
 void scale(float x, float y) {
@@ -364,13 +376,7 @@ void scale(float s) {
 // Text
 //
 
-struct Font {
-  VGFont font = VG_INVALID_HANDLE;
-  stbtt_fontinfo info;
-};
-
-static float fontSize = 14.0f;
-static Font font;
+static const float FONT_SCALE = 1.0f / 256.0f;
 
 static std::unique_ptr<char[]> loadFileBinary(const std::string &path) {
   std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
@@ -387,7 +393,7 @@ static std::unique_ptr<char[]> loadFileBinary(const std::string &path) {
   return {};
 }
 
-static VGFont createVGFontFromFontInfo(const stbtt_fontinfo &info) {
+static VGFont createVGFontFromTTFont(const stbtt_fontinfo &info) {
   auto font = vgCreateFont(info.numGlyphs);
   for (int i = 0; i < info.numGlyphs; ++i) {
     stbtt_vertex *verts;
@@ -421,15 +427,15 @@ static VGFont createVGFontFromFontInfo(const stbtt_fontinfo &info) {
 
     stbtt_FreeShape(&info, verts);
 
-    auto path = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_S_16, 1.0f / 256.0f, 0.0f, 0,
-                             0, VG_PATH_CAPABILITY_ALL);
+    auto path = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_S_16, FONT_SCALE, 0.0f, 0, 0,
+                             VG_PATH_CAPABILITY_ALL);
     vgAppendPathData(path, numVerts, segs, coords);
 
     int advanceWidth;
     stbtt_GetGlyphHMetrics(&info, i, &advanceWidth, nullptr);
 
     VGfloat origin[] = { 0.0f, 0.0f };
-    VGfloat escapement[] = { advanceWidth / 256.0f, 0.0f };
+    VGfloat escapement[] = { advanceWidth * FONT_SCALE, 0.0f };
     vgSetGlyphToPath(font, i, path, VG_FALSE, origin, escapement);
 
     vgDestroyPath(path);
@@ -440,12 +446,23 @@ static VGFont createVGFontFromFontInfo(const stbtt_fontinfo &info) {
 void loadFont(const std::string &path) {
   auto fontBuffer = loadFileBinary(path);
   if (fontBuffer) {
-    if (stbtt_InitFont(&font.info, reinterpret_cast<uint8_t *>(fontBuffer.get()), 0)) {
-      font.font = createVGFontFromFontInfo(font.info);
-    } else {
+    if (stbtt_InitFont(&ctx.fontInfo, reinterpret_cast<uint8_t *>(fontBuffer.get()), 0)) {
+      ctx.font = createVGFontFromTTFont(ctx.fontInfo);
+
+      int ascent, descent, lineGap;
+      stbtt_GetFontVMetrics(&ctx.fontInfo, &ascent, &descent, &lineGap);
+      ctx.fontAscent = ascent * FONT_SCALE;
+      ctx.fontDescent = descent * FONT_SCALE;
+      ctx.fontLineGap = lineGap * FONT_SCALE;
+    }
+    else {
       std::cerr << "Failed to load font from: " << path << std::endl;
     }
   }
+}
+
+void textAlign(uint32_t align) {
+  ctx.textAlign = align;
 }
 
 namespace utf8 {
@@ -489,7 +506,18 @@ static uint32_t decode(uint32_t *state, uint32_t *codep, uint32_t byte) {
 
 } // utf8
 
-void text(const std::string &text) {
+// TODO(ryan): Do we need to take the glyph bounding box into consideration here?
+static float getGlyphsWidth(const std::vector<uint32_t> &indices) {
+  float width = 0;
+  int advanceWidth;
+  for (auto i : indices) {
+    stbtt_GetGlyphHMetrics(&ctx.fontInfo, i, &advanceWidth, nullptr);
+    width += advanceWidth * FONT_SCALE;
+  }
+  return width;
+}
+
+void fillText(const std::string &text) {
   std::vector<uint32_t> indices;
   indices.reserve(text.length());
 
@@ -499,19 +527,38 @@ void text(const std::string &text) {
     uint32_t decodeState = 0;
     for (int i = 0; i < text.length(); ++i) {
       if (!utf8::decode(&decodeState, &codepoint, text[i])) {
-        indices.push_back(stbtt_FindGlyphIndex(&font.info, codepoint));
+        indices.push_back(stbtt_FindGlyphIndex(&ctx.fontInfo, codepoint));
       }
     }
   }
 
-  VGfloat origin[] = { 0.0f, 0.0f };
-  vgSetfv(VG_GLYPH_ORIGIN, 2, origin);
+  // Determine origin from alignment
+  {
+    VGfloat origin[] = { 0.0f, 0.0f };
+
+    if (!(ctx.textAlign & ALIGN_LEFT)) {
+      auto width = getGlyphsWidth(indices);
+      if (ctx.textAlign & ALIGN_RIGHT)
+        origin[0] = -width;
+      else if (ctx.textAlign & ALIGN_CENTER)
+        origin[0] = width * -0.5f;
+    }
+
+    if (ctx.textAlign & ALIGN_TOP)
+      origin[1] = -ctx.fontAscent;
+    else if (ctx.textAlign & ALIGN_BOTTOM)
+      origin[1] = -ctx.fontDescent;
+    else if (ctx.textAlign & ALIGN_MIDDLE)
+      origin[1] = 0.5f * (ctx.fontAscent - ctx.fontDescent) - ctx.fontAscent;
+
+    vgSetfv(VG_GLYPH_ORIGIN, 2, origin);
+  }
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
   loadMatrix();
-  vgScale(fontSize, -fontSize);
+  vgScale(ctx.fontSize, -ctx.fontSize);
 
-  vgDrawGlyphs(font.font, indices.size(), &indices[0], nullptr, nullptr, VG_FILL_PATH, true);
+  vgDrawGlyphs(ctx.font, indices.size(), &indices[0], nullptr, nullptr, VG_FILL_PATH, true);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
 }

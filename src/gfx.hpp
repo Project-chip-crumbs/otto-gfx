@@ -12,6 +12,19 @@
 
 namespace otto {
 
+enum Align {
+  // Horizontal
+  ALIGN_LEFT   = 1 << 0,
+  ALIGN_CENTER = 1 << 1,
+  ALIGN_RIGHT  = 1 << 2,
+
+  // Vertical
+  ALIGN_TOP      = 1 << 3,
+  ALIGN_MIDDLE   = 1 << 4,
+  ALIGN_BOTTOM   = 1 << 5,
+  ALIGN_BASELINE = 1 << 6
+};
+
 void strokePaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 void fillPaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 
@@ -69,6 +82,7 @@ void scale(float x, float y);
 void scale(float s);
 
 void loadFont(const std::string &path);
-void text(const std::string &text);
+void textAlign(uint32_t align);
+void fillText(const std::string &text);
 
 } // otto
