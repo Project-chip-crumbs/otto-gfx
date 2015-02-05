@@ -448,13 +448,60 @@ void loadFont(const std::string &path) {
   }
 }
 
+namespace utf8 {
+
+// Copyright (c) 2008-2010 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+// See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
+
+#define UTF8_ACCEPT 0
+#define UTF8_REJECT 12
+
+static const uint8_t utf8d[] = {
+  // The first part of the table maps bytes to character classes that
+  // to reduce the size of the transition table and create bitmasks.
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,  9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+   7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,  7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+   8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  10,3,3,3,3,3,3,3,3,3,3,3,3,4,3,3, 11,6,6,6,5,8,8,8,8,8,8,8,8,8,8,8,
+
+  // The second part is a transition table that maps a combination
+  // of a state of the automaton and a character class to a state.
+   0,12,24,36,60,96,84,12,12,12,48,72, 12,12,12,12,12,12,12,12,12,12,12,12,
+  12, 0,12,12,12,12,12, 0,12, 0,12,12, 12,24,12,12,12,12,12,24,12,24,12,12,
+  12,12,12,12,12,12,12,24,12,12,12,12, 12,24,12,12,12,12,12,12,12,24,12,12,
+  12,12,12,12,12,12,12,36,12,36,12,12, 12,36,12,12,12,12,12,36,12,36,12,12,
+  12,36,12,12,12,12,12,12,12,12,12,12,
+};
+
+static uint32_t decode(uint32_t *state, uint32_t *codep, uint32_t byte) {
+  uint32_t type = utf8d[byte];
+
+  *codep = (*state != UTF8_ACCEPT) ? (byte & 0x3fu) | (*codep << 6)
+                                   : (0xff >> type) & (byte);
+
+  *state = utf8d[256 + *state + type];
+  return *state;
+}
+
+} // utf8
+
 void text(const std::string &text) {
-  auto count = text.length();
+  std::vector<uint32_t> indices;
+  indices.reserve(text.length());
 
-  VGuint indices[count];
-
-  for (int i = 0; i < count; ++i) {
-    indices[i] = stbtt_FindGlyphIndex(&font.info, text[i]);
+  // Decode string into utf8 codepoints and then glyph indices
+  {
+    uint32_t codepoint;
+    uint32_t decodeState = 0;
+    for (int i = 0; i < text.length(); ++i) {
+      if (!utf8::decode(&decodeState, &codepoint, text[i])) {
+        indices.push_back(stbtt_FindGlyphIndex(&font.info, codepoint));
+      }
+    }
   }
 
   VGfloat origin[] = { 0.0f, 0.0f };
@@ -464,7 +511,7 @@ void text(const std::string &text) {
   loadMatrix();
   vgScale(fontSize, -fontSize);
 
-  vgDrawGlyphs(font.font, count, indices, nullptr, nullptr, VG_FILL_PATH, true);
+  vgDrawGlyphs(font.font, indices.size(), &indices[0], nullptr, nullptr, VG_FILL_PATH, true);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
 }
