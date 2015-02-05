@@ -68,7 +68,7 @@ void scale(const glm::vec2 &vec);
 void scale(float x, float y);
 void scale(float s);
 
-void initFontOCRA();
+void loadFont(const std::string &path);
 void text(const std::string &text);
 
 } // otto

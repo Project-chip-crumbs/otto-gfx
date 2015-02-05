@@ -8,9 +8,13 @@
 #define NANOSVG_IMPLEMENTATION
 #include "nanosvg.h"
 
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+
 #include <VG/vgu.h>
 #include <vector>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 
 namespace otto {
@@ -151,13 +155,13 @@ void strokeJoin(VGJoinStyle join) {
 
 
 void moveTo(VGPath path, float x, float y) {
-  VGubyte segs[] = { VG_MOVE_TO_ABS };
+  VGubyte segs[] = { VG_MOVE_TO };
   VGfloat coords[] = { x, y };
   vgAppendPathData(path, 1, segs, coords);
 }
 
 void lineTo(VGPath path, float x, float y) {
-  VGubyte segs[] = { VG_LINE_TO_ABS };
+  VGubyte segs[] = { VG_LINE_TO };
   VGfloat coords[] = { x, y };
   vgAppendPathData(path, 1, segs, coords);
 }
@@ -360,41 +364,88 @@ void scale(float s) {
 // Text
 //
 
-// NOTE(ryan): This is currently hardcoded to only support one font.
-
-#include "OCRAStd.inc"
-
 struct Font {
-  VGFont font;
-  const short *charMap;
+  VGFont font = VG_INVALID_HANDLE;
+  stbtt_fontinfo info;
 };
 
-static float fontSize = 35.0f;
-static Font defaultFont;
+static float fontSize = 14.0f;
+static Font font;
 
-void initFontOCRA() {
-  auto font = vgCreateFont(OCRAStd_glyphCount);
+static std::unique_ptr<char[]> loadFileBinary(const std::string &path) {
+  std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
+  if (file.is_open()) {
+    auto size = file.tellg();
+    auto buffer = std::unique_ptr<char[]>(new char[size]);
 
-  for (int i = 0; i < OCRAStd_glyphCount; ++i) {
-    auto path = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_S_32, 1.0f / 65536.0f, 0.0f,
-                             0, 0, VG_PATH_CAPABILITY_ALL);
+    file.seekg(0, std::ios::beg);
+    file.read(buffer.get(), size);
+    file.close();
 
-    auto instructionCount = OCRAStd_glyphInstructionCounts[i];
-    if (instructionCount > 0) {
-      auto points = &OCRAStd_glyphPoints[OCRAStd_glyphPointIndices[i] * 2];
-      auto instructions = &OCRAStd_glyphInstructions[OCRAStd_glyphInstructionIndices[i]];
-      vgAppendPathData(path, instructionCount, instructions, points);
+    return buffer;
+  }
+  return {};
+}
+
+static VGFont createVGFontFromFontInfo(const stbtt_fontinfo &info) {
+  auto font = vgCreateFont(info.numGlyphs);
+  for (int i = 0; i < info.numGlyphs; ++i) {
+    stbtt_vertex *verts;
+    auto numVerts = stbtt_GetGlyphShape(&info, i, &verts);
+
+    VGubyte segs[numVerts];
+    VGshort coords[numVerts * 4];
+    int numCoords = 0;
+    for (int j = 0; j < numVerts; ++j) {
+      const auto &v = verts[j];
+      switch (v.type) {
+        case STBTT_vmove: {
+          segs[j] = VG_MOVE_TO;
+          coords[numCoords++] = v.x;
+          coords[numCoords++] = v.y;
+        } break;
+        case STBTT_vline: {
+          segs[j] = VG_LINE_TO;
+          coords[numCoords++] = v.x;
+          coords[numCoords++] = v.y;
+        } break;
+        case STBTT_vcurve: {
+          segs[j] = VG_QUAD_TO;
+          coords[numCoords++] = v.cx;
+          coords[numCoords++] = v.cy;
+          coords[numCoords++] = v.x;
+          coords[numCoords++] = v.y;
+        } break;
+      }
     }
 
+    stbtt_FreeShape(&info, verts);
+
+    auto path = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_S_16, 1.0f / 256.0f, 0.0f, 0,
+                             0, VG_PATH_CAPABILITY_ALL);
+    vgAppendPathData(path, numVerts, segs, coords);
+
+    int advanceWidth;
+    stbtt_GetGlyphHMetrics(&info, i, &advanceWidth, nullptr);
+
     VGfloat origin[] = { 0.0f, 0.0f };
-    VGfloat escapement[] = { OCRAStd_glyphAdvances[i] / 65536.0f, 0.0f };
+    VGfloat escapement[] = { advanceWidth / 256.0f, 0.0f };
     vgSetGlyphToPath(font, i, path, VG_FALSE, origin, escapement);
 
     vgDestroyPath(path);
   }
+  return font;
+}
 
-  defaultFont.font = font;
-  defaultFont.charMap = OCRAStd_characterMap;\
+void loadFont(const std::string &path) {
+  auto fontBuffer = loadFileBinary(path);
+  if (fontBuffer) {
+    if (stbtt_InitFont(&font.info, reinterpret_cast<uint8_t *>(fontBuffer.get()), 0)) {
+      font.font = createVGFontFromFontInfo(font.info);
+    } else {
+      std::cerr << "Failed to load font from: " << path << std::endl;
+    }
+  }
 }
 
 void text(const std::string &text) {
@@ -403,8 +454,7 @@ void text(const std::string &text) {
   VGuint indices[count];
 
   for (int i = 0; i < count; ++i) {
-    auto c = text[i];
-    indices[i] = defaultFont.charMap[c];
+    indices[i] = stbtt_FindGlyphIndex(&font.info, text[i]);
   }
 
   VGfloat origin[] = { 0.0f, 0.0f };
@@ -414,7 +464,7 @@ void text(const std::string &text) {
   loadMatrix();
   vgScale(fontSize, -fontSize);
 
-  vgDrawGlyphs(defaultFont.font, count, indices, nullptr, nullptr, VG_FILL_PATH, true);
+  vgDrawGlyphs(font.font, count, indices, nullptr, nullptr, VG_FILL_PATH, true);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
 }

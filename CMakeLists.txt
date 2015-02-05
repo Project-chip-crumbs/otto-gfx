@@ -8,6 +8,7 @@ include_directories(
   "deps/Choreograph/src"
   "deps/nanosvg/src"
   "deps/glm/glm"
+  "lib"
   "src")
 
 include_directories(SYSTEM
