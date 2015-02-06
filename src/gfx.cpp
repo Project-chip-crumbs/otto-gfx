@@ -27,6 +27,7 @@ struct Context {
   std::vector<mat3> transformStack = { mat3() };
 
   VGFont font = VG_INVALID_HANDLE;
+  std::unique_ptr<char[]> fontData;
   stbtt_fontinfo fontInfo;
   float fontAscent, fontDescent, fontLineGap;
   float fontSize = 14.0f;
@@ -444,9 +445,9 @@ static VGFont createVGFontFromTTFont(const stbtt_fontinfo &info) {
 }
 
 void loadFont(const std::string &path) {
-  auto fontBuffer = loadFileBinary(path);
-  if (fontBuffer) {
-    if (stbtt_InitFont(&ctx.fontInfo, reinterpret_cast<uint8_t *>(fontBuffer.get()), 0)) {
+  ctx.fontData = loadFileBinary(path);
+  if (ctx.fontData) {
+    if (stbtt_InitFont(&ctx.fontInfo, reinterpret_cast<uint8_t *>(ctx.fontData.get()), 0)) {
       ctx.font = createVGFontFromTTFont(ctx.fontInfo);
 
       int ascent, descent, lineGap;
