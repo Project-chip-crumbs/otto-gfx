@@ -391,7 +391,7 @@ void scale(float s) {
 // Text
 //
 
-static const float FONT_SCALE = 1.0f / 256.0f;
+static const float FONT_SCALE = 1.0f / 768.0f;
 
 static std::unique_ptr<char[]> loadFileBinary(const std::string &path) {
   std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
@@ -474,6 +474,10 @@ void loadFont(const std::string &path) {
       std::cerr << "Failed to load font from: " << path << std::endl;
     }
   }
+}
+
+void fontSize(float size) {
+  ctx.fontSize = size;
 }
 
 void textAlign(uint32_t align) {

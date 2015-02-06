@@ -85,6 +85,8 @@ void scale(float x, float y);
 void scale(float s);
 
 void loadFont(const std::string &path);
+
+void fontSize(float size);
 void textAlign(uint32_t align);
 void fillText(const std::string &text);
 
