@@ -198,6 +198,13 @@ void arc(VGPath path, float x, float y, float w, float h, float startAngle, floa
   vguArc(path, x, y, w, h, as, ae, VGU_ARC_OPEN);
 }
 
+void rect(VGPath path, float x, float y, float w, float h) {
+  static const VGubyte segs[] = { VG_MOVE_TO, VG_LINE_TO, VG_LINE_TO, VG_LINE_TO, VG_CLOSE_PATH };
+  float x2 = x + w, y2 = y + h;
+  VGfloat coords[] = { x, y, x, y2, x2, y2, x2, y };
+  vgAppendPathData(path, 5, segs, coords);
+}
+
 
 //
 // Scratch Path Operators
@@ -247,6 +254,13 @@ void circle(float cx, float cy, float radius) {
 }
 void circle(const vec2 &ctr, float radius) {
   circle(ctr.x, ctr.y, radius);
+}
+
+void rect(float x, float y, float w, float h) {
+  rect(ctx.scratchPath, x, y, w, h);
+}
+void rect(const glm::vec2 &pos, const glm::vec2 &size) {
+  rect(pos.x, pos.y, size.x, size.y);
 }
 
 
