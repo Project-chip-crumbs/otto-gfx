@@ -526,10 +526,10 @@ static uint32_t decode(uint32_t *state, uint32_t *codep, uint32_t byte) {
 } // utf8
 
 // TODO(ryan): Do we need to take the glyph bounding box into consideration here?
-static float getGlyphsWidth(const std::vector<uint32_t> &indices) {
+static float getGlyphsWidth(const std::vector<uint32_t> &glyphs) {
   float width = 0;
   int advanceWidth;
-  for (auto i : indices) {
+  for (auto i : glyphs) {
     stbtt_GetGlyphHMetrics(&ctx.fontInfo, i, &advanceWidth, nullptr);
     width += advanceWidth * FONT_SCALE;
   }
@@ -537,18 +537,30 @@ static float getGlyphsWidth(const std::vector<uint32_t> &indices) {
 }
 
 void fillText(const std::string &text) {
-  std::vector<uint32_t> indices;
-  indices.reserve(text.length());
+  std::vector<uint32_t> glyphs;
+  glyphs.reserve(text.length());
+
+  std::vector<VGfloat> adjustmentsX;
+  adjustmentsX.reserve(text.length());
 
   // Decode string into utf8 codepoints and then glyph indices
   {
     uint32_t codepoint;
+    uint32_t glyph, glyphPrev;
     uint32_t decodeState = 0;
     for (int i = 0; i < text.length(); ++i) {
       if (!utf8::decode(&decodeState, &codepoint, text[i])) {
-        indices.push_back(stbtt_FindGlyphIndex(&ctx.fontInfo, codepoint));
+        glyphPrev = glyph;
+        glyph = stbtt_FindGlyphIndex(&ctx.fontInfo, codepoint);
+        glyphs.push_back(glyph);
+
+        if (glyphs.size() > 1) {
+          auto kerning = stbtt_GetGlyphKernAdvance(&ctx.fontInfo, glyphPrev, glyph) * FONT_SCALE;
+          adjustmentsX.push_back(kerning);
+        }
       }
     }
+    adjustmentsX.push_back(0.0f);
   }
 
   // Determine origin from alignment
@@ -556,7 +568,7 @@ void fillText(const std::string &text) {
     VGfloat origin[] = { 0.0f, 0.0f };
 
     if (!(ctx.textAlign & ALIGN_LEFT)) {
-      auto width = getGlyphsWidth(indices);
+      auto width = getGlyphsWidth(glyphs);
       if (ctx.textAlign & ALIGN_RIGHT)
         origin[0] = -width;
       else if (ctx.textAlign & ALIGN_CENTER)
@@ -577,7 +589,7 @@ void fillText(const std::string &text) {
   loadMatrix();
   vgScale(ctx.fontSize, -ctx.fontSize);
 
-  vgDrawGlyphs(ctx.font, indices.size(), &indices[0], nullptr, nullptr, VG_FILL_PATH, true);
+  vgDrawGlyphs(ctx.font, glyphs.size(), &glyphs[0], &adjustmentsX[0], nullptr, VG_FILL_PATH, true);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
 }
