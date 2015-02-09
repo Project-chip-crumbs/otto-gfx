@@ -526,13 +526,17 @@ static uint32_t decode(uint32_t *state, uint32_t *codep, uint32_t byte) {
 } // utf8
 
 // TODO(ryan): Do we need to take the glyph bounding box into consideration here?
-static float getGlyphsWidth(const std::vector<uint32_t> &glyphs) {
+static float getGlyphsWidth(const std::vector<uint32_t> &glyphs,
+                            const std::vector<VGfloat> &adjustmentsX) {
+  assert(glyphs.size() == adjustmentsX.size());
+
   float width = 0;
   int advanceWidth;
-  for (auto i : glyphs) {
-    stbtt_GetGlyphHMetrics(&ctx.fontInfo, i, &advanceWidth, nullptr);
-    width += advanceWidth * FONT_SCALE;
+  for (size_t i = 0; i < glyphs.size(); ++i) {
+    stbtt_GetGlyphHMetrics(&ctx.fontInfo, glyphs[i], &advanceWidth, nullptr);
+    width += (advanceWidth * FONT_SCALE) + adjustmentsX[i];
   }
+
   return width;
 }
 
@@ -568,7 +572,7 @@ void fillText(const std::string &text) {
     VGfloat origin[] = { 0.0f, 0.0f };
 
     if (!(ctx.textAlign & ALIGN_LEFT)) {
-      auto width = getGlyphsWidth(glyphs);
+      auto width = getGlyphsWidth(glyphs, adjustmentsX);
       if (ctx.textAlign & ALIGN_RIGHT)
         origin[0] = -width;
       else if (ctx.textAlign & ALIGN_CENTER)
