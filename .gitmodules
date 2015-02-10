@@ -1,9 +1,6 @@
 [submodule "deps/nanosvg"]
 	path = deps/nanosvg
 	url = https://github.com/memononen/nanosvg
-[submodule "deps/Choreograph"]
-	path = deps/Choreograph
-	url = https://github.com/sansumbrella/Choreograph
 [submodule "deps/glm"]
 	path = deps/glm
 	url = https://github.com/g-truc/glm.git
