@@ -25,6 +25,10 @@ enum Align {
   ALIGN_BASELINE = 1 << 6
 };
 
+struct Rect {
+  glm::vec2 pos, size;
+};
+
 void strokePaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 void fillPaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 
@@ -59,6 +63,7 @@ void circle(float cx, float cy, float radius);
 void circle(const glm::vec2 &ctr, float radius);
 void rect(float x, float y, float w, float h);
 void rect(const glm::vec2 &pos, const glm::vec2 &size);
+void rect(const Rect &r);
 
 void fill();
 void stroke();
@@ -75,6 +80,7 @@ void draw(const NSVGimage *svg);
 void pushTransform();
 void popTransform();
 void setTransform(const glm::mat3 &xf);
+void setTransformIdentity();
 const glm::mat3 getTransform();
 
 void translate(const glm::vec2 &vec);
@@ -89,5 +95,7 @@ void loadFont(const std::string &path);
 void fontSize(float size);
 void textAlign(uint32_t align);
 void fillText(const std::string &text);
+
+Rect getTextBounds(const std::string &text);
 
 } // otto

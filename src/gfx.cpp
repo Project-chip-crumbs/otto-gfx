@@ -262,6 +262,9 @@ void rect(float x, float y, float w, float h) {
 void rect(const glm::vec2 &pos, const glm::vec2 &size) {
   rect(pos.x, pos.y, size.x, size.y);
 }
+void rect(const Rect &r) {
+  rect(r.pos, r.size);
+}
 
 
 void fill() {
@@ -313,7 +316,8 @@ void draw(const NSVGimage &svg) {
       strokePaint(shape->stroke, shape->opacity);
     }
 
-    auto vgPath = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_F, 1.0f, 0.0f, 0, 0, VG_PATH_CAPABILITY_ALL);
+    auto vgPath = vgCreatePath(VG_PATH_FORMAT_STANDARD, VG_PATH_DATATYPE_F, 1.0f, 0.0f, 0, 0,
+                               VG_PATH_CAPABILITY_ALL);
 
     for (auto path = shape->paths; path != NULL; path = path->next) {
       moveTo(vgPath, path->pts[0], path->pts[1]);
@@ -354,6 +358,11 @@ void popTransform() {
 
 void setTransform(const mat3 &xf) {
   ctx.transformStack.back() = xf;
+  loadMatrix();
+}
+
+void setTransformIdentity() {
+  ctx.transformStack.back() = mat3();
   loadMatrix();
 }
 
@@ -525,27 +534,16 @@ static uint32_t decode(uint32_t *state, uint32_t *codep, uint32_t byte) {
 
 } // utf8
 
-// TODO(ryan): Do we need to take the glyph bounding box into consideration here?
-static float getGlyphsWidth(const std::vector<uint32_t> &glyphs,
-                            const std::vector<VGfloat> &adjustmentsX) {
-  assert(glyphs.size() == adjustmentsX.size());
-
-  float width = 0;
-  int advanceWidth;
-  for (size_t i = 0; i < glyphs.size(); ++i) {
-    stbtt_GetGlyphHMetrics(&ctx.fontInfo, glyphs[i], &advanceWidth, nullptr);
-    width += (advanceWidth * FONT_SCALE) + adjustmentsX[i];
-  }
-
-  return width;
-}
-
-void fillText(const std::string &text) {
+struct GlyphData {
   std::vector<uint32_t> glyphs;
-  glyphs.reserve(text.length());
+  std::vector<float> adjustmentsX;
+};
 
-  std::vector<VGfloat> adjustmentsX;
-  adjustmentsX.reserve(text.length());
+static GlyphData getTextGlyphData(const std::string &text) {
+  GlyphData data;
+
+  data.glyphs.reserve(text.length());
+  data.adjustmentsX.reserve(text.length());
 
   // Decode string into utf8 codepoints and then glyph indices
   {
@@ -556,44 +554,81 @@ void fillText(const std::string &text) {
       if (!utf8::decode(&decodeState, &codepoint, text[i])) {
         glyphPrev = glyph;
         glyph = stbtt_FindGlyphIndex(&ctx.fontInfo, codepoint);
-        glyphs.push_back(glyph);
+        data.glyphs.push_back(glyph);
 
-        if (glyphs.size() > 1) {
+        if (data.glyphs.size() > 1) {
           auto kerning = stbtt_GetGlyphKernAdvance(&ctx.fontInfo, glyphPrev, glyph) * FONT_SCALE;
-          adjustmentsX.push_back(kerning);
+          data.adjustmentsX.push_back(kerning);
         }
       }
     }
-    adjustmentsX.push_back(0.0f);
+    data.adjustmentsX.push_back(0.0f);
   }
 
-  // Determine origin from alignment
-  {
-    VGfloat origin[] = { 0.0f, 0.0f };
+  return data;
+}
 
-    if (!(ctx.textAlign & ALIGN_LEFT)) {
-      auto width = getGlyphsWidth(glyphs, adjustmentsX);
-      if (ctx.textAlign & ALIGN_RIGHT)
-        origin[0] = -width;
-      else if (ctx.textAlign & ALIGN_CENTER)
-        origin[0] = width * -0.5f;
-    }
+// TODO(ryan): Do we need to take the glyph bounding box into consideration here?
+static float getGlyphsWidth(const GlyphData &data) {
+  assert(data.glyphs.size() == data.adjustmentsX.size());
 
-    if (ctx.textAlign & ALIGN_TOP)
-      origin[1] = -ctx.fontAscent;
-    else if (ctx.textAlign & ALIGN_BOTTOM)
-      origin[1] = -ctx.fontDescent;
-    else if (ctx.textAlign & ALIGN_MIDDLE)
-      origin[1] = 0.5f * (ctx.fontAscent - ctx.fontDescent) - ctx.fontAscent;
-
-    vgSetfv(VG_GLYPH_ORIGIN, 2, origin);
+  float width = 0;
+  int advanceWidth;
+  for (size_t i = 0; i < data.glyphs.size(); ++i) {
+    stbtt_GetGlyphHMetrics(&ctx.fontInfo, data.glyphs[i], &advanceWidth, nullptr);
+    width += (advanceWidth * FONT_SCALE) + data.adjustmentsX[i];
   }
+
+  return width;
+}
+
+static tvec2<VGfloat> getGlyphsOrigin(const GlyphData &data, bool widthPrecalculated = false,
+                                      float width = 0.0f) {
+  float x = 0.0f, y = 0.0f;
+
+  if (!(ctx.textAlign & ALIGN_LEFT)) {
+    if (!widthPrecalculated)
+      width = getGlyphsWidth(data);
+    if (ctx.textAlign & ALIGN_RIGHT)
+      x = -width;
+    else if (ctx.textAlign & ALIGN_CENTER)
+      x = width * -0.5f;
+  }
+
+  if (ctx.textAlign & ALIGN_TOP)
+    y = -ctx.fontAscent;
+  else if (ctx.textAlign & ALIGN_BOTTOM)
+    y = -ctx.fontDescent;
+  else if (ctx.textAlign & ALIGN_MIDDLE)
+    y = 0.5f * (ctx.fontAscent - ctx.fontDescent) - ctx.fontAscent;
+
+  return { x, y };
+}
+
+// TODO(ryan): This function returns the idealized bounds based on the text metrics. We should also
+// implement a way to get the precise pixel bounds.
+Rect getTextBounds(const std::string &text) {
+  auto glyphData = getTextGlyphData(text);
+  auto width = getGlyphsWidth(glyphData);
+
+  auto origin = getGlyphsOrigin(glyphData, true, width);
+  origin.y += ctx.fontDescent;
+
+  return { origin * ctx.fontSize, vec2(width, ctx.fontAscent - ctx.fontDescent) * ctx.fontSize };
+}
+
+void fillText(const std::string &text) {
+  auto glyphData = getTextGlyphData(text);
+  auto origin = getGlyphsOrigin(glyphData);
+
+  vgSetfv(VG_GLYPH_ORIGIN, 2, &origin[0]);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
   loadMatrix();
-  vgScale(ctx.fontSize, -ctx.fontSize);
+  vgScale(ctx.fontSize, ctx.fontSize);
 
-  vgDrawGlyphs(ctx.font, glyphs.size(), &glyphs[0], &adjustmentsX[0], nullptr, VG_FILL_PATH, true);
+  vgDrawGlyphs(ctx.font, glyphData.glyphs.size(), &glyphData.glyphs[0], &glyphData.adjustmentsX[0],
+               nullptr, VG_FILL_PATH, true);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
 }
