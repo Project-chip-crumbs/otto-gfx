@@ -79,6 +79,12 @@ void clear(float x, float y, float w, float h);
 void draw(const NSVGimage &svg, bool flipY = true);
 void draw(const NSVGimage *svg, bool flipY = true);
 
+void setColorTransform(float sr, float sg, float sb, float sa,
+                       float br, float bg, float bb, float ba);
+void setColorTransform(const glm::vec4 &scale, const glm::vec4 &bias);
+void enableColorTransform();
+void disableColorTransform();
+
 void pushTransform();
 void popTransform();
 void setTransform(const glm::mat3 &xf);

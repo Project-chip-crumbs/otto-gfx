@@ -360,10 +360,33 @@ void draw(const NSVGimage *img, bool flipY) {
 
 
 //
-// Stack
+// Color Transform
 //
 
-static void loadMatrix() {
+void setColorTransform(float sr, float sg, float sb, float sa,
+                       float br, float bg, float bb, float ba) {
+  VGfloat xf[] = { sr, sg, sb, sa, br, bg, bb, ba };
+  vgSetfv(VG_COLOR_TRANSFORM_VALUES, 8, xf);
+}
+
+void setColorTransform(const glm::vec4 &scale, const glm::vec4 &bias) {
+  setColorTransform(scale.r, scale.g, scale.b, scale.a, bias.r, bias.g, bias.b, bias.a);
+}
+
+void enableColorTransform() {
+  vgSeti(VG_COLOR_TRANSFORM, VG_TRUE);
+}
+
+void disableColorTransform() {
+  vgSeti(VG_COLOR_TRANSFORM, VG_FALSE);
+}
+
+
+//
+// Transform Stack
+//
+
+static void loadTransform() {
   vgLoadMatrix(&ctx.transformStack.back()[0][0]);
 }
 
@@ -374,17 +397,17 @@ void pushTransform() {
 
 void popTransform() {
   ctx.transformStack.pop_back();
-  loadMatrix();
+  loadTransform();
 }
 
 void setTransform(const mat3 &xf) {
   ctx.transformStack.back() = xf;
-  loadMatrix();
+  loadTransform();
 }
 
 void setTransformIdentity() {
   ctx.transformStack.back() = mat3();
-  loadMatrix();
+  loadTransform();
 }
 
 const mat3 getTransform() {
@@ -394,7 +417,7 @@ const mat3 getTransform() {
 
 void translate(const vec2 &vec) {
   ctx.transformStack.back() = translate(ctx.transformStack.back(), vec);
-  loadMatrix();
+  loadTransform();
 }
 void translate(float x, float y) {
   translate(vec2(x, y));
@@ -402,12 +425,12 @@ void translate(float x, float y) {
 
 void rotate(float radians) {
   ctx.transformStack.back() = rotate(ctx.transformStack.back(), radians);
-  loadMatrix();
+  loadTransform();
 }
 
 void scale(const vec2 &vec) {
   ctx.transformStack.back() = scale(ctx.transformStack.back(), vec);
-  loadMatrix();
+  loadTransform();
 }
 void scale(float x, float y) {
   scale(vec2(x, y));
@@ -645,7 +668,7 @@ void fillText(const std::string &text) {
   vgSetfv(VG_GLYPH_ORIGIN, 2, &origin[0]);
 
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
-  loadMatrix();
+  loadTransform();
   vgScale(ctx.fontSize, ctx.fontSize);
 
   vgDrawGlyphs(ctx.font, glyphData.glyphs.size(), &glyphData.glyphs[0], &glyphData.adjustmentsX[0],
