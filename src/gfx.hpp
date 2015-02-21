@@ -35,9 +35,11 @@ void fillPaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 void strokeColor(float r, float g, float b, float a = 1.0f);
 void strokeColor(const glm::vec4 &color);
 void strokeColor(const glm::vec3 &color);
+void strokeColor(uint32_t color);
 void fillColor(float r, float g, float b, float a = 1.0f);
 void fillColor(const glm::vec4 &color);
 void fillColor(const glm::vec3 &color);
+void fillColor(uint32_t color);
 
 void strokeWidth(VGfloat width);
 void strokeCap(VGCapStyle cap);

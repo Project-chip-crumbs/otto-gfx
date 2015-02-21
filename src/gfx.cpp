@@ -38,10 +38,11 @@ struct Context {
 
 static Context ctx;
 
-static void unpackRGB(uint32_t color, float &r, float &g, float &b) {
-  r = (color         & 0xff) / 255.0f;
-  g = ((color >> 8)  & 0xff) / 255.0f;
-  b = ((color >> 16) & 0xff) / 255.0f;
+static void unpackRGBA(uint32_t color, float *r, float *g, float *b, float *a) {
+  if (r) *r = (color         & 0xff) / 255.0f;
+  if (g) *g = ((color >> 8)  & 0xff) / 255.0f;
+  if (b) *b = ((color >> 16) & 0xff) / 255.0f;
+  if (a) *a = ((color >> 24) & 0xff) / 255.0f;
 }
 
 static VGColorRampSpreadMode fromNSVG(NSVGspreadType spread) {
@@ -87,7 +88,7 @@ static VGPaint createPaintFromNSVGpaint(const NSVGpaint &svgPaint, float opacity
 
   if (svgPaint.type == NSVG_PAINT_COLOR) {
     VGfloat color[4];
-    unpackRGB(svgPaint.color, color[0], color[1], color[2]);
+    unpackRGBA(svgPaint.color, &color[0], &color[1], &color[2], nullptr);
     color[3] = opacity;
     vgSetParameteri(paint, VG_PAINT_TYPE, VG_PAINT_TYPE_COLOR);
     vgSetParameterfv(paint, VG_PAINT_COLOR, 4, color);
@@ -147,6 +148,11 @@ void strokeColor(const vec4 &color) {
 void strokeColor(const vec3 &color) {
   strokeColor(color.r, color.g, color.b);
 }
+void strokeColor(uint32_t color) {
+  float r, g, b, a;
+  unpackRGBA(color, &r, &g, &b, &a);
+  strokeColor(r, g, b, a);
+}
 
 void fillColor(float r, float g, float b, float a) {
   auto paint = createPaintFromRGBA(r, g, b, a);
@@ -158,6 +164,11 @@ void fillColor(const vec4 &color) {
 }
 void fillColor(const vec3 &color) {
   fillColor(color.r, color.g, color.b);
+}
+void fillColor(uint32_t color) {
+  float r, g, b, a;
+  unpackRGBA(color, &r, &g, &b, &a);
+  fillColor(r, g, b, a);
 }
 
 void strokeWidth(VGfloat width) {
