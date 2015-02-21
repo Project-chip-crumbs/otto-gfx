@@ -301,7 +301,14 @@ void clear(float x, float y, float w, float h) {
 // SVG
 //
 
-void draw(const NSVGimage &svg) {
+void draw(const NSVGimage &svg, bool flipY) {
+  if (flipY) {
+    // TODO(ryan): Combine this into one matrix multiply. No need to use the user facing API here.
+    pushTransform();
+    translate(0.0f, svg.height);
+    scale(1.0f, -1.0f);
+  }
+
   for (auto shape = svg.shapes; shape != NULL; shape = shape->next) {
     bool hasStroke = shape->stroke.type != NSVG_PAINT_NONE;
     bool hasFill = shape->fill.type != NSVG_PAINT_NONE;
@@ -332,10 +339,12 @@ void draw(const NSVGimage &svg) {
                        (hasStroke ? VG_STROKE_PATH : 0));
     vgDestroyPath(vgPath);
   }
+
+  if (flipY) popTransform();
 }
 
-void draw(const NSVGimage *img) {
-  draw(*img);
+void draw(const NSVGimage *img, bool flipY) {
+  draw(*img, flipY);
 }
 
 

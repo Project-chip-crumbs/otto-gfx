@@ -74,8 +74,8 @@ void clearColor(const glm::vec4 &color);
 void clearColor(const glm::vec3 &color);
 void clear(float x, float y, float w, float h);
 
-void draw(const NSVGimage &svg);
-void draw(const NSVGimage *svg);
+void draw(const NSVGimage &svg, bool flipY = true);
+void draw(const NSVGimage *svg, bool flipY = true);
 
 void pushTransform();
 void popTransform();
