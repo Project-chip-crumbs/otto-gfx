@@ -102,8 +102,7 @@ static VGPaint createPaintFromNSVGpaint(const NSVGpaint &svgPaint, float opacity
   //   const auto &grad = *svgPaint.gradient;
 
   //   if (svgPaint.type == NSVG_PAINT_LINEAR_GRADIENT) {
-  //     VGfloat points[] = {
-  //     };
+  //     VGfloat points[] = {};
   //     vgSetParameteri(paint, VG_PAINT_TYPE, VG_PAINT_TYPE_LINEAR_GRADIENT);
   //     vgSetParameterfv(paint, VG_PAINT_LINEAR_GRADIENT, 4, points);
   //   }
@@ -116,7 +115,8 @@ static VGPaint createPaintFromNSVGpaint(const NSVGpaint &svgPaint, float opacity
   //     s[4] = 1.0f; // TODO(ryan): Are NSVG gradients always opaque?
   //   }
 
-  //   vgSetParameteri(paint, VG_PAINT_COLOR_RAMP_SPREAD_MODE, fromNSVG(static_cast<NSVGspreadType>(grad.spread)));
+  //   vgSetParameteri(paint, VG_PAINT_COLOR_RAMP_SPREAD_MODE,
+  //                   fromNSVG(static_cast<NSVGspreadType>(grad.spread)));
   //   vgSetParameteri(paint, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, false);
   //   vgSetParameterfv(paint, VG_PAINT_COLOR_RAMP_STOPS, 5 * grad.nstops, stops);
   // }
@@ -631,8 +631,7 @@ static tvec2<VGfloat> getGlyphsOrigin(const GlyphData &data, bool widthPrecalcul
   float x = 0.0f, y = 0.0f;
 
   if (!(ctx.textAlign & ALIGN_LEFT)) {
-    if (!widthPrecalculated)
-      width = getGlyphsWidth(data);
+    if (!widthPrecalculated) width = getGlyphsWidth(data);
     if (ctx.textAlign & ALIGN_RIGHT)
       x = -width;
     else if (ctx.textAlign & ALIGN_CENTER)
