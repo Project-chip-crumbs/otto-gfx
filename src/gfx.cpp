@@ -441,6 +441,15 @@ void scale(float s) {
 
 
 //
+// Svg Loading
+//
+
+Svg *loadSvg(const std::string &path, const std::string &units, float dpi) {
+  return nsvgParseFromFile(path.c_str(), units.c_str(), dpi);
+}
+
+
+//
 // Text
 //
 

@@ -29,6 +29,8 @@ struct Rect {
   glm::vec2 pos, size;
 };
 
+using Svg = NSVGimage;
+
 void strokePaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 void fillPaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 
@@ -76,8 +78,8 @@ void clearColor(const glm::vec4 &color);
 void clearColor(const glm::vec3 &color);
 void clear(float x, float y, float w, float h);
 
-void draw(const NSVGimage &svg, bool flipY = true);
-void draw(const NSVGimage *svg, bool flipY = true);
+void draw(const Svg &svg, bool flipY = true);
+void draw(const Svg *svg, bool flipY = true);
 
 void setColorTransform(float sr, float sg, float sb, float sa,
                        float br, float bg, float bb, float ba);
@@ -98,6 +100,7 @@ void scale(const glm::vec2 &vec);
 void scale(float x, float y);
 void scale(float s);
 
+Svg *loadSvg(const std::string &path, const std::string &units = "px", float dpi = 96);
 void loadFont(const std::string &path);
 
 void fontSize(float size);
