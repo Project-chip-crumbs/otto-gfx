@@ -531,6 +531,7 @@ static VGFont createVGFontFromTTFont(const stbtt_fontinfo &info) {
   return font;
 }
 
+// TODO(ryan): Allow loading of more than one font at a time.
 void loadFont(const std::string &path) {
   ctx.fontData = loadFileBinary(path);
   if (ctx.fontData) {
