@@ -210,11 +210,12 @@ void arc(VGPath path, float x, float y, float w, float h, float startAngle, floa
   vguArc(path, x, y, w, h, as, ae, VGU_ARC_OPEN);
 }
 
-void rect(VGPath path, float x, float y, float w, float h) {
-  static const VGubyte segs[] = { VG_MOVE_TO, VG_LINE_TO, VG_LINE_TO, VG_LINE_TO, VG_CLOSE_PATH };
-  float x2 = x + w, y2 = y + h;
-  VGfloat coords[] = { x, y, x, y2, x2, y2, x2, y };
-  vgAppendPathData(path, 5, segs, coords);
+void rect(VGPath path, float x, float y, float width, float height) {
+  vguRect(path, x, y, width, height);
+}
+
+void roundRect(VGPath path, float x, float y, float width, float height, float radius) {
+  vguRoundRect(path, x, y, width, height, radius * 2.0f, radius * 2.0f);
 }
 
 
@@ -268,14 +269,24 @@ void circle(const vec2 &ctr, float radius) {
   circle(ctr.x, ctr.y, radius);
 }
 
-void rect(float x, float y, float w, float h) {
-  rect(ctx.scratchPath, x, y, w, h);
+void rect(float x, float y, float width, float height) {
+  rect(ctx.scratchPath, x, y, width, height);
 }
 void rect(const glm::vec2 &pos, const glm::vec2 &size) {
   rect(pos.x, pos.y, size.x, size.y);
 }
 void rect(const Rect &r) {
   rect(r.pos, r.size);
+}
+
+void roundRect(float x, float y, float width, float height, float radius) {
+  roundRect(ctx.scratchPath, x, y, width, height, radius);
+}
+void roundRect(const glm::vec2 &pos, const glm::vec2 &size, float radius) {
+  roundRect(pos.x, pos.y, size.x, size.y, radius);
+}
+void roundRect(const Rect &r, float radius) {
+  roundRect(r.pos, r.size, radius);
 }
 
 

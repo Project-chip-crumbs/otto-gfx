@@ -51,7 +51,8 @@ void moveTo(VGPath path, float x, float y);
 void lineTo(VGPath path, float x, float y);
 void cubicTo(VGPath path, float x1, float y1, float x2, float y2, float x3, float y3);
 void arc(VGPath path, float x, float y, float w, float h, float startAngle, float endAngle);
-void rect(VGPath path, float x, float y, float w, float h);
+void rect(VGPath path, float x, float y, float width, float height);
+void roundRect(VGPath path, float x, float y, float width, float height, float radius);
 
 void beginPath();
 
@@ -65,9 +66,12 @@ void arc(float cx, float cy, float w, float h, float angleStart, float angleEnd)
 void arc(const glm::vec2 &ctr, const glm::vec2 &size, float angleStart, float angleEnd);
 void circle(float cx, float cy, float radius);
 void circle(const glm::vec2 &ctr, float radius);
-void rect(float x, float y, float w, float h);
+void rect(float x, float y, float width, float height);
 void rect(const glm::vec2 &pos, const glm::vec2 &size);
 void rect(const Rect &r);
+void roundRect(float x, float y, float width, float height, float radius);
+void roundRect(const glm::vec2 &pos, const glm::vec2 &size, float radius);
+void roundRect(const Rect &r, float radius);
 
 void fill();
 void stroke();
