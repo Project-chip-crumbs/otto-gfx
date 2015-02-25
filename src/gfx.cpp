@@ -290,6 +290,15 @@ void roundRect(const Rect &r, float radius) {
 }
 
 
+void fillRuleEvenOdd() {
+  vgSeti(VG_FILL_RULE, VG_EVEN_ODD);
+}
+
+void fillRuleNonZero() {
+  vgSeti(VG_FILL_RULE, VG_NON_ZERO);
+}
+
+
 void fill() {
   vgDrawPath(ctx.scratchPath, VG_FILL_PATH);
 }

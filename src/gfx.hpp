@@ -73,6 +73,9 @@ void roundRect(float x, float y, float width, float height, float radius);
 void roundRect(const glm::vec2 &pos, const glm::vec2 &size, float radius);
 void roundRect(const Rect &r, float radius);
 
+void fillRuleEvenOdd();
+void fillRuleNonZero();
+
 void fill();
 void stroke();
 void fillAndStroke();
