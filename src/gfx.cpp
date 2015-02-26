@@ -22,10 +22,16 @@ namespace otto {
 
 using namespace glm;
 
+struct Mask {
+  VGMaskLayer layer;
+  VGint width, height;
+};
+
 struct Context {
   VGPath scratchPath = 0;
 
   std::vector<mat3> transformStack = { mat3() };
+  std::vector<Mask> maskStack;
 
   VGFont font = VG_INVALID_HANDLE;
   std::unique_ptr<char[]> fontData;
@@ -34,6 +40,8 @@ struct Context {
   float fontSize = 14.0f;
 
   uint32_t textAlign = ALIGN_LEFT | ALIGN_BASELINE;
+
+  VGMaskOperation maskOperation = VG_UNION_MASK;
 };
 
 static Context ctx;
@@ -399,6 +407,58 @@ void enableColorTransform() {
 
 void disableColorTransform() {
   vgSeti(VG_COLOR_TRANSFORM, VG_FALSE);
+}
+
+
+//
+// Masking
+//
+
+void beginMask(int width, int height) {
+  auto layer = vgCreateMaskLayer(width, height);
+  vgCopyMask(layer, 0, 0, 0, 0, width, height);
+  ctx.maskStack.push_back({ layer, width, height });
+  enableMask();
+}
+
+void endMask() {
+  auto &mask = ctx.maskStack.back();
+  vgMask(mask.layer, VG_SET_MASK, 0, 0, mask.width, mask.height);
+  vgDestroyMaskLayer(mask.layer);
+  ctx.maskStack.pop_back();
+  if (ctx.maskStack.size() == 0) disableMask();
+}
+
+void enableMask() {
+  vgSeti(VG_MASKING, VG_TRUE);
+}
+
+void disableMask() {
+  vgSeti(VG_MASKING, VG_FALSE);
+}
+
+void fillMask(float x, float y, float width, float height) {
+  vgMask(0, VG_FILL_MASK, x, y, width, height);
+}
+
+void clearMask(float x, float y, float width, float height) {
+  vgMask(0, VG_CLEAR_MASK, x, y, width, height);
+}
+
+void maskOperation(VGMaskOperation operation) {
+  ctx.maskOperation = operation;
+}
+
+void fillToMask() {
+  vgRenderToMask(ctx.scratchPath, VG_FILL_PATH, ctx.maskOperation);
+}
+
+void strokeToMask() {
+  vgRenderToMask(ctx.scratchPath, VG_STROKE_PATH, ctx.maskOperation);
+}
+
+void fillAndStrokeToMask() {
+  vgRenderToMask(ctx.scratchPath, VG_FILL_PATH | VG_STROKE_PATH, ctx.maskOperation);
 }
 
 

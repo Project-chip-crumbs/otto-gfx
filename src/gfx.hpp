@@ -94,6 +94,17 @@ void setColorTransform(const glm::vec4 &scale, const glm::vec4 &bias);
 void enableColorTransform();
 void disableColorTransform();
 
+void beginMask(int width, int height);
+void endMask();
+void enableMask();
+void disableMask();
+void fillMask(float x, float y, float width, float height);
+void clearMask(float x, float y, float width, float height);
+void maskOperation(VGMaskOperation operation);
+void fillToMask();
+void strokeToMask();
+void fillAndStrokeToMask();
+
 void pushTransform();
 void popTransform();
 void setTransform(const glm::mat3 &xf);
