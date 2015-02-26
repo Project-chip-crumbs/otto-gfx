@@ -331,7 +331,7 @@ void clearColor(const vec3 &color) {
   clearColor(color.r, color.g, color.b);
 }
 
-void clear(float x, float y, float w, float h) {
+void clear(int x, int y, int w, int h) {
   vgClear(x, y, w, h);
 }
 
@@ -437,11 +437,11 @@ void disableMask() {
   vgSeti(VG_MASKING, VG_FALSE);
 }
 
-void fillMask(float x, float y, float width, float height) {
+void fillMask(int x, int y, int width, int height) {
   vgMask(0, VG_FILL_MASK, x, y, width, height);
 }
 
-void clearMask(float x, float y, float width, float height) {
+void clearMask(int x, int y, int width, int height) {
   vgMask(0, VG_CLEAR_MASK, x, y, width, height);
 }
 
