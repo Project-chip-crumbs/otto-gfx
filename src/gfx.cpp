@@ -41,7 +41,8 @@ struct Context {
 
   uint32_t textAlign = ALIGN_LEFT | ALIGN_BASELINE;
 
-  VGMaskOperation maskOperation = VG_UNION_MASK;
+  bool drawingToMask = false;
+  VGMaskOperation maskOperation = VG_INTERSECT_MASK;
 };
 
 static Context ctx;
@@ -307,16 +308,22 @@ void fillRuleNonZero() {
 }
 
 
+static void renderPath(VGPath path, VGbitfield paintModes) {
+  if (ctx.drawingToMask) {
+    vgRenderToMask(path, paintModes, ctx.maskOperation);
+  } else {
+    vgDrawPath(path, paintModes);
+  }
+}
+
 void fill() {
-  vgDrawPath(ctx.scratchPath, VG_FILL_PATH);
+  renderPath(ctx.scratchPath, VG_FILL_PATH);
 }
-
 void stroke() {
-  vgDrawPath(ctx.scratchPath, VG_STROKE_PATH);
+  renderPath(ctx.scratchPath, VG_STROKE_PATH);
 }
-
 void fillAndStroke() {
-  vgDrawPath(ctx.scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
+  renderPath(ctx.scratchPath, VG_FILL_PATH | VG_STROKE_PATH);
 }
 
 
@@ -369,12 +376,12 @@ void draw(const NSVGimage &svg, bool flipY) {
     for (auto path = shape->paths; path != NULL; path = path->next) {
       moveTo(vgPath, path->pts[0], path->pts[1]);
       for (int i = 0; i < path->npts - 1; i += 3) {
-        float* p = &path->pts[i * 2];
+        float *p = &path->pts[i * 2];
         cubicTo(vgPath, p[2], p[3], p[4], p[5], p[6], p[7]);
       }
     }
 
-    vgDrawPath(vgPath, (hasFill   ? VG_FILL_PATH   : 0) |
+    renderPath(vgPath, (hasFill   ? VG_FILL_PATH   : 0) |
                        (hasStroke ? VG_STROKE_PATH : 0));
     vgDestroyPath(vgPath);
   }
@@ -404,7 +411,6 @@ void setColorTransform(const glm::vec4 &scale, const glm::vec4 &bias) {
 void enableColorTransform() {
   vgSeti(VG_COLOR_TRANSFORM, VG_TRUE);
 }
-
 void disableColorTransform() {
   vgSeti(VG_COLOR_TRANSFORM, VG_FALSE);
 }
@@ -414,25 +420,29 @@ void disableColorTransform() {
 // Masking
 //
 
-void beginMask(int width, int height) {
+void pushMask(int width, int height) {
   auto layer = vgCreateMaskLayer(width, height);
   vgCopyMask(layer, 0, 0, 0, 0, width, height);
   ctx.maskStack.push_back({ layer, width, height });
-  enableMask();
 }
 
-void endMask() {
+void popMask() {
   auto &mask = ctx.maskStack.back();
   vgMask(mask.layer, VG_SET_MASK, 0, 0, mask.width, mask.height);
   vgDestroyMaskLayer(mask.layer);
   ctx.maskStack.pop_back();
-  if (ctx.maskStack.size() == 0) disableMask();
+}
+
+void beginMask() {
+  ctx.drawingToMask = true;
+}
+void endMask() {
+  ctx.drawingToMask = false;
 }
 
 void enableMask() {
   vgSeti(VG_MASKING, VG_TRUE);
 }
-
 void disableMask() {
   vgSeti(VG_MASKING, VG_FALSE);
 }
@@ -440,25 +450,12 @@ void disableMask() {
 void fillMask(int x, int y, int width, int height) {
   vgMask(0, VG_FILL_MASK, x, y, width, height);
 }
-
 void clearMask(int x, int y, int width, int height) {
   vgMask(0, VG_CLEAR_MASK, x, y, width, height);
 }
 
 void maskOperation(VGMaskOperation operation) {
   ctx.maskOperation = operation;
-}
-
-void fillToMask() {
-  vgRenderToMask(ctx.scratchPath, VG_FILL_PATH, ctx.maskOperation);
-}
-
-void strokeToMask() {
-  vgRenderToMask(ctx.scratchPath, VG_STROKE_PATH, ctx.maskOperation);
-}
-
-void fillAndStrokeToMask() {
-  vgRenderToMask(ctx.scratchPath, VG_FILL_PATH | VG_STROKE_PATH, ctx.maskOperation);
 }
 
 

@@ -94,16 +94,15 @@ void setColorTransform(const glm::vec4 &scale, const glm::vec4 &bias);
 void enableColorTransform();
 void disableColorTransform();
 
-void beginMask(int width, int height);
+void pushMask(int width, int height);
+void popMask();
+void beginMask();
 void endMask();
 void enableMask();
 void disableMask();
 void fillMask(int x, int y, int width, int height);
 void clearMask(int x, int y, int width, int height);
 void maskOperation(VGMaskOperation operation);
-void fillToMask();
-void strokeToMask();
-void fillAndStrokeToMask();
 
 void pushTransform();
 void popTransform();
@@ -126,5 +125,24 @@ void textAlign(uint32_t align);
 void fillText(const std::string &text);
 
 Rect getTextBounds(const std::string &text);
+
+struct Noncopyable {
+protected:
+  Noncopyable() = default;
+  ~Noncopyable() = default;
+
+  Noncopyable(const Noncopyable &) = delete;
+  Noncopyable &operator=(const Noncopyable &) = delete;
+};
+
+struct ScopedTransform : private Noncopyable {
+  ScopedTransform() { pushTransform(); }
+  ~ScopedTransform() { popTransform(); }
+};
+
+struct ScopedMask : private Noncopyable {
+  ScopedMask(int width, int height) { pushMask(width, height); }
+  ~ScopedMask() { popMask(); }
+};
 
 } // otto
