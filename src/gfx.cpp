@@ -281,7 +281,7 @@ void circle(const vec2 &ctr, float radius) {
 void rect(float x, float y, float width, float height) {
   rect(ctx.scratchPath, x, y, width, height);
 }
-void rect(const glm::vec2 &pos, const glm::vec2 &size) {
+void rect(const vec2 &pos, const vec2 &size) {
   rect(pos.x, pos.y, size.x, size.y);
 }
 void rect(const Rect &r) {
@@ -291,7 +291,7 @@ void rect(const Rect &r) {
 void roundRect(float x, float y, float width, float height, float radius) {
   roundRect(ctx.scratchPath, x, y, width, height, radius);
 }
-void roundRect(const glm::vec2 &pos, const glm::vec2 &size, float radius) {
+void roundRect(const vec2 &pos, const vec2 &size, float radius) {
   roundRect(pos.x, pos.y, size.x, size.y, radius);
 }
 void roundRect(const Rect &r, float radius) {
@@ -404,7 +404,7 @@ void setColorTransform(float sr, float sg, float sb, float sa,
   vgSetfv(VG_COLOR_TRANSFORM_VALUES, 8, xf);
 }
 
-void setColorTransform(const glm::vec4 &scale, const glm::vec4 &bias) {
+void setColorTransform(const vec4 &scale, const vec4 &bias) {
   setColorTransform(scale.r, scale.g, scale.b, scale.a, bias.r, bias.g, bias.b, bias.a);
 }
 
