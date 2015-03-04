@@ -100,13 +100,16 @@ void enableColorTransform();
 void disableColorTransform();
 
 void pushMask(int width, int height);
+void pushMask(const vec2 &size);
 void popMask();
 void beginMask();
 void endMask();
 void enableMask();
 void disableMask();
 void fillMask(int x, int y, int width, int height);
+void fillMask(const vec2 &pos, const vec2 &size);
 void clearMask(int x, int y, int width, int height);
+void clearMask(const vec2 &pos, const vec2 &size);
 void maskOperation(VGMaskOperation operation);
 
 void pushTransform();
@@ -147,6 +150,7 @@ struct ScopedTransform : private Noncopyable {
 
 struct ScopedMask : private Noncopyable {
   ScopedMask(int width, int height) { pushMask(width, height); }
+  ScopedMask(const vec2 &size) { pushMask(size); }
   ~ScopedMask() { popMask(); }
 };
 

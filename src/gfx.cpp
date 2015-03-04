@@ -425,6 +425,9 @@ void pushMask(int width, int height) {
   vgCopyMask(layer, 0, 0, 0, 0, width, height);
   ctx.maskStack.push_back({ layer, width, height });
 }
+void pushMask(const vec2 &size) {
+  pushMask(size.x, size.y);
+}
 
 void popMask() {
   auto &mask = ctx.maskStack.back();
@@ -450,8 +453,14 @@ void disableMask() {
 void fillMask(int x, int y, int width, int height) {
   vgMask(0, VG_FILL_MASK, x, y, width, height);
 }
+void fillMask(const vec2 &pos, const vec2 &size) {
+  fillMask(pos.x, pos.y, size.x, size.y);
+}
 void clearMask(int x, int y, int width, int height) {
   vgMask(0, VG_CLEAR_MASK, x, y, width, height);
+}
+void clearMask(const vec2 &pos, const vec2 &size) {
+  clearMask(pos.x, pos.y, size.x, size.y);
 }
 
 void maskOperation(VGMaskOperation operation) {
