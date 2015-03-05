@@ -54,6 +54,19 @@ static void unpackRGBA(uint32_t color, float *r, float *g, float *b, float *a) {
   if (a) *a = ((color >> 24) & 0xff) / 255.0f;
 }
 
+static void unpackBGRA(uint32_t color, float *r, float *g, float *b, float *a) {
+  if (b) *b = (color         & 0xff) / 255.0f;
+  if (g) *g = ((color >> 8)  & 0xff) / 255.0f;
+  if (r) *r = ((color >> 16) & 0xff) / 255.0f;
+  if (a) *a = ((color >> 24) & 0xff) / 255.0f;
+}
+
+vec3 colorBGR(uint32_t color) {
+  vec3 c;
+  unpackBGRA(color, &c.r, &c.g, &c.b, nullptr);
+  return c;
+}
+
 static VGColorRampSpreadMode fromNSVG(NSVGspreadType spread) {
   switch (spread) {
     case NSVG_SPREAD_REFLECT: return VG_COLOR_RAMP_SPREAD_REFLECT;

@@ -32,9 +32,16 @@ enum Align {
 
 struct Rect {
   vec2 pos, size;
+
+  Rect(const vec2 &pos, const vec2 &size) : pos{ pos }, size{ size } {}
+  Rect(float x, float y, float width, float height) : pos{ x, y }, size{ width, height } {}
+
+  float getArea() const { return size.x * size.y; }
 };
 
 using Svg = NSVGimage;
+
+vec3 colorBGR(uint32_t color);
 
 void strokePaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
 void fillPaint(const NSVGpaint &svgPaint, float opacity = 1.0f);
