@@ -232,6 +232,11 @@ void arc(VGPath path, float x, float y, float w, float h, float startAngle, floa
   vguArc(path, x, y, w, h, as, ae, VGU_ARC_OPEN);
 }
 
+void circle(VGPath path, float x, float y, float radius) {
+  auto d = radius * 2.0f;
+  vguEllipse(path, x, y, d, d);
+}
+
 void rect(VGPath path, float x, float y, float width, float height) {
   vguRect(path, x, y, width, height);
 }
@@ -284,8 +289,7 @@ void arc(const vec2 &ctr, const vec2 &size, float angleStart, float angleEnd) {
 }
 
 void circle(float cx, float cy, float radius) {
-  auto d = radius * 2.0f;
-  arc(cx, cy, d, d, 0.0f, M_PI * 2.0f);
+  circle(ctx.scratchPath, cx, cy, radius);
 }
 void circle(const vec2 &ctr, float radius) {
   circle(ctr.x, ctr.y, radius);
