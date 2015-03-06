@@ -97,6 +97,8 @@ void clearColor(float r, float g, float b, float a = 1.0f);
 void clearColor(const vec4 &color);
 void clearColor(const vec3 &color);
 void clear(int x, int y, int w, int h);
+void clear(const vec2 &pos, const vec2 &size);
+void clear(const Rect &rect);
 
 void draw(const Svg &svg, bool flipY = true);
 void draw(const Svg *svg, bool flipY = true);
@@ -116,8 +118,10 @@ void enableMask();
 void disableMask();
 void fillMask(int x, int y, int width, int height);
 void fillMask(const vec2 &pos, const vec2 &size);
+void fillMask(const Rect &rect);
 void clearMask(int x, int y, int width, int height);
 void clearMask(const vec2 &pos, const vec2 &size);
+void clearMask(const Rect &rect);
 void maskOperation(VGMaskOperation operation);
 
 void pushTransform();

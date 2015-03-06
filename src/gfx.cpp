@@ -358,6 +358,12 @@ void clearColor(const vec3 &color) {
 void clear(int x, int y, int w, int h) {
   vgClear(x, y, w, h);
 }
+void clear(const vec2 &pos, const vec2 &size) {
+  clear(pos.x, pos.y, size.x, size.y);
+}
+void clear(const Rect &rect){
+  clear(rect.pos, rect.size);
+}
 
 
 //
@@ -473,11 +479,18 @@ void fillMask(int x, int y, int width, int height) {
 void fillMask(const vec2 &pos, const vec2 &size) {
   fillMask(pos.x, pos.y, size.x, size.y);
 }
+void fillMask(const Rect &rect) {
+  fillMask(rect.pos, rect.size);
+}
+
 void clearMask(int x, int y, int width, int height) {
   vgMask(0, VG_CLEAR_MASK, x, y, width, height);
 }
 void clearMask(const vec2 &pos, const vec2 &size) {
   clearMask(pos.x, pos.y, size.x, size.y);
+}
+void clearMask(const Rect &rect) {
+  clearMask(rect.pos, rect.size);
 }
 
 void maskOperation(VGMaskOperation operation) {
