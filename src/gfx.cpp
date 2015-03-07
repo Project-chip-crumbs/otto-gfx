@@ -569,7 +569,7 @@ Svg *loadSvg(const std::string &path, const std::string &units, float dpi) {
 // Text
 //
 
-static const float FONT_SCALE = 1.0f / 768.0f;
+static const float FONT_SCALE = 1.0f / 1024.0f;
 
 static std::unique_ptr<char[]> loadFileBinary(const std::string &path) {
   std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
