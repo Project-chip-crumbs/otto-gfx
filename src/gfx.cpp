@@ -792,6 +792,7 @@ void fillText(const std::string &text) {
 
   vgSetfv(VG_GLYPH_ORIGIN, 2, &origin[0]);
 
+  auto prevMatrixMode = vgGeti(VG_MATRIX_MODE);
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
   loadTransform();
   vgScale(ctx.fontSize, ctx.fontSize);
@@ -799,7 +800,7 @@ void fillText(const std::string &text) {
   vgDrawGlyphs(ctx.font, glyphData.glyphs.size(), &glyphData.glyphs[0], &glyphData.adjustmentsX[0],
                nullptr, VG_FILL_PATH, true);
 
-  vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+  vgSeti(VG_MATRIX_MODE, prevMatrixMode);
 }
 
 } // otto
