@@ -172,7 +172,7 @@ void strokeColor(const vec3 &color) {
 }
 void strokeColor(uint32_t color) {
   float r, g, b, a;
-  unpackRGBA(color, &r, &g, &b, &a);
+  unpackBGRA(color, &r, &g, &b, &a);
   strokeColor(r, g, b, a);
 }
 
@@ -189,7 +189,7 @@ void fillColor(const vec3 &color) {
 }
 void fillColor(uint32_t color) {
   float r, g, b, a;
-  unpackRGBA(color, &r, &g, &b, &a);
+  unpackBGRA(color, &r, &g, &b, &a);
   fillColor(r, g, b, a);
 }
 
