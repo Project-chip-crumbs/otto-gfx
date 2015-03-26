@@ -172,7 +172,7 @@ void strokeColor(const vec3 &color) {
 }
 void strokeColor(uint32_t color) {
   float r, g, b, a;
-  unpackBGRA(color, &r, &g, &b, &a);
+  unpackRGBA(color, &r, &g, &b, &a);
   strokeColor(r, g, b, a);
 }
 
@@ -189,7 +189,7 @@ void fillColor(const vec3 &color) {
 }
 void fillColor(uint32_t color) {
   float r, g, b, a;
-  unpackBGRA(color, &r, &g, &b, &a);
+  unpackRGBA(color, &r, &g, &b, &a);
   fillColor(r, g, b, a);
 }
 
@@ -235,6 +235,10 @@ void arc(VGPath path, float x, float y, float w, float h, float startAngle, floa
 void circle(VGPath path, float x, float y, float radius) {
   auto d = radius * 2.0f;
   vguEllipse(path, x, y, d, d);
+}
+
+void ellipse(VGPath path, float x, float y, float rx, float ry) {
+  vguEllipse(path, x, y, rx * 2.0f, ry * 2.0f);
 }
 
 void rect(VGPath path, float x, float y, float width, float height) {
@@ -293,6 +297,13 @@ void circle(float cx, float cy, float radius) {
 }
 void circle(const vec2 &ctr, float radius) {
   circle(ctr.x, ctr.y, radius);
+}
+
+void ellipse(float cx, float cy, float rx, float ry) {
+  ellipse(ctx.scratchPath, cx, cy, rx, ry);
+}
+void ellipse(const vec2 &ctr, const vec2 &radius) {
+  ellipse(ctr.x, ctr.y, radius.x, radius.y);
 }
 
 void rect(float x, float y, float width, float height) {
