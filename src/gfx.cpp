@@ -797,7 +797,7 @@ Rect getTextBounds(const std::string &text) {
   return { origin * ctx.fontSize, vec2(width, ctx.fontAscent - ctx.fontDescent) * ctx.fontSize };
 }
 
-void fillText(const std::string &text) {
+void fillText(const std::string &text, float x, float y) {
   auto glyphData = getTextGlyphData(text);
   auto origin = getGlyphsOrigin(glyphData);
 
@@ -806,12 +806,21 @@ void fillText(const std::string &text) {
   auto prevMatrixMode = vgGeti(VG_MATRIX_MODE);
   vgSeti(VG_MATRIX_MODE, VG_MATRIX_GLYPH_USER_TO_SURFACE);
   loadTransform();
+  vgTranslate(x, y);
   vgScale(ctx.fontSize, ctx.fontSize);
 
   vgDrawGlyphs(ctx.font, glyphData.glyphs.size(), &glyphData.glyphs[0], &glyphData.adjustmentsX[0],
                nullptr, VG_FILL_PATH, true);
 
   vgSeti(VG_MATRIX_MODE, prevMatrixMode);
+}
+
+void fillText(const std::string &text) {
+  fillText(text, 0.0f, 0.0f);
+}
+
+void fillText(const std::string &text, const vec2 &pos) {
+  fillText(text, pos.x, pos.y);
 }
 
 } // otto

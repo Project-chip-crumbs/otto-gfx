@@ -143,6 +143,8 @@ void loadFont(const std::string &path);
 void fontSize(float size);
 void textAlign(uint32_t align);
 void fillText(const std::string &text);
+void fillText(const std::string &text, float x, float y);
+void fillText(const std::string &text, const vec2 &pos);
 
 Rect getTextBounds(const std::string &text);
 
