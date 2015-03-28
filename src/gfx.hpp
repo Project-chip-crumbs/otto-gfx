@@ -88,6 +88,7 @@ void roundRect(const Rect &r, float radius);
 
 void fillRuleEvenOdd();
 void fillRuleNonZero();
+VGFillRule getFillRule();
 
 void fill();
 void stroke();
@@ -166,6 +167,15 @@ struct ScopedMask : private Noncopyable {
   ScopedMask(int width, int height) { pushMask(width, height); }
   ScopedMask(const vec2 &size) { pushMask(size); }
   ~ScopedMask() { popMask(); }
+};
+
+struct ScopedFillRule : private Noncopyable {
+  VGFillRule prevFillRule;
+
+  ScopedFillRule(VGFillRule fillRule) : prevFillRule{ getFillRule() } {
+    vgSeti(VG_FILL_RULE, fillRule);
+  }
+  ~ScopedFillRule() { vgSeti(VG_FILL_RULE, prevFillRule); }
 };
 
 } // otto

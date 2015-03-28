@@ -335,6 +335,10 @@ void fillRuleNonZero() {
   vgSeti(VG_FILL_RULE, VG_NON_ZERO);
 }
 
+VGFillRule getFillRule() {
+  return static_cast<VGFillRule>(vgGeti(VG_FILL_RULE));
+}
+
 
 static void renderPath(VGPath path, VGbitfield paintModes) {
   if (ctx.drawingToMask) {
