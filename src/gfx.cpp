@@ -42,7 +42,7 @@ struct Context {
   uint32_t textAlign = ALIGN_LEFT | ALIGN_BASELINE;
 
   bool drawingToMask = false;
-  VGMaskOperation maskOperation = VG_INTERSECT_MASK;
+  VGMaskOperation maskOperation = VG_UNION_MASK;
 };
 
 static Context ctx;
@@ -475,9 +475,17 @@ void popMask() {
 }
 
 void beginMask() {
+  if (ctx.maskStack.size() > 0) {
+    auto &mask = ctx.maskStack.back();
+    clearMask(0, 0, mask.width, mask.height);
+  }
   ctx.drawingToMask = true;
 }
 void endMask() {
+  if (ctx.maskStack.size() > 0) {
+    auto &mask = ctx.maskStack.back();
+    vgMask(mask.layer, VG_INTERSECT_MASK, 0, 0, mask.width, mask.height);
+  }
   ctx.drawingToMask = false;
 }
 
