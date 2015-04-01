@@ -385,7 +385,7 @@ void clear(const Rect &rect){
 // SVG
 //
 
-void draw(const NSVGimage &svg, bool flipY) {
+void drawSvg(const NSVGimage &svg, bool flipY) {
   if (flipY) {
     // TODO(ryan): Combine this into one matrix multiply. No need to use the user facing API here.
     pushTransform();
@@ -427,8 +427,8 @@ void draw(const NSVGimage &svg, bool flipY) {
   if (flipY) popTransform();
 }
 
-void draw(const NSVGimage *img, bool flipY) {
-  draw(*img, flipY);
+void drawSvg(const NSVGimage *img, bool flipY) {
+  drawSvg(*img, flipY);
 }
 
 

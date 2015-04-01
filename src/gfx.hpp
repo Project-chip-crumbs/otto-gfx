@@ -101,8 +101,8 @@ void clear(int x, int y, int w, int h);
 void clear(const vec2 &pos, const vec2 &size);
 void clear(const Rect &rect);
 
-void draw(const Svg &svg, bool flipY = true);
-void draw(const Svg *svg, bool flipY = true);
+void drawSvg(const Svg &svg, bool flipY = true);
+void drawSvg(const Svg *svg, bool flipY = true);
 
 void setColorTransform(float sr, float sg, float sb, float sa,
                        float br, float bg, float bb, float ba);
