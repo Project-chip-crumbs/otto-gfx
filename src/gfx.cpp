@@ -446,11 +446,21 @@ void setColorTransform(const vec4 &scale, const vec4 &bias) {
   setColorTransform(scale.r, scale.g, scale.b, scale.a, bias.r, bias.g, bias.b, bias.a);
 }
 
+const std::pair<vec4, vec4> getColorTransform() {
+  VGfloat xf[8];
+  vgGetfv(VG_COLOR_TRANSFORM_VALUES, 8, xf);
+  return { { xf[0], xf[1], xf[2], xf[3] }, { xf[4], xf[5], xf[6], xf[7] } };
+}
+
 void enableColorTransform() {
   vgSeti(VG_COLOR_TRANSFORM, VG_TRUE);
 }
 void disableColorTransform() {
   vgSeti(VG_COLOR_TRANSFORM, VG_FALSE);
+}
+
+bool getColorTransformEnabled() {
+  return vgGeti(VG_COLOR_TRANSFORM) == VG_TRUE;
 }
 
 
@@ -833,6 +843,27 @@ void fillText(const std::string &text) {
 
 void fillText(const std::string &text, const vec2 &pos) {
   fillText(text, pos.x, pos.y);
+}
+
+
+ScopedColorTransform::ScopedColorTransform(float sr, float sg, float sb, float sa,
+                                           float br, float bg, float bb, float ba)
+: prevColorTransform{ getColorTransform() },
+  prevColorTransformEnabled{ getColorTransformEnabled() } {
+  setColorTransform(sr, sg, sb, sa, br, bg, bb, ba);
+  enableColorTransform();
+}
+
+ScopedColorTransform::ScopedColorTransform(const vec4 &scale, const vec4 &bias)
+: ScopedColorTransform{ scale.r, scale.g, scale.b, scale.a, bias.r, bias.g, bias.b, bias.a } {
+}
+
+ScopedColorTransform::~ScopedColorTransform() {
+  setColorTransform(prevColorTransform.first, prevColorTransform.second);
+  if (prevColorTransformEnabled)
+    enableColorTransform();
+  else
+    disableColorTransform();
 }
 
 } // otto

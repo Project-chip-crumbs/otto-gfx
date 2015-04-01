@@ -109,6 +109,8 @@ void setColorTransform(float sr, float sg, float sb, float sa,
 void setColorTransform(const vec4 &scale, const vec4 &bias);
 void enableColorTransform();
 void disableColorTransform();
+const std::pair<vec4, vec4> getColorTransform();
+bool getColorTransformEnabled();
 
 void pushMask(int width, int height);
 void pushMask(const vec2 &size);
@@ -176,6 +178,16 @@ struct ScopedFillRule : private Noncopyable {
     vgSeti(VG_FILL_RULE, fillRule);
   }
   ~ScopedFillRule() { vgSeti(VG_FILL_RULE, prevFillRule); }
+};
+
+struct ScopedColorTransform : private Noncopyable {
+  std::pair<vec4, vec4> prevColorTransform;
+  bool prevColorTransformEnabled;
+
+  ScopedColorTransform(float sr, float sg, float sb, float sa,
+                       float br, float bg, float bb, float ba);
+  ScopedColorTransform(const vec4 &scale, const vec4 &bias);
+  ~ScopedColorTransform();
 };
 
 } // otto
