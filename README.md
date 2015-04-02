@@ -4,12 +4,10 @@ This library is designed to provide an easy-to-use immediate mode API backed by 
 
 ## Building
 
-This project requires a C++ compiler and standard library that support C++14. We are currently testing it with `clang 3.5.1` and `libc++ 3.5.1` on Arch linux.
-
-From the root directory make a `build/` directory and run `cmake` from inside it.
+From the root directory make a `build/` directory and run `cmake` from inside it. Make sure to use a compiler and standard library that support C++11.
 
 	mkdir build && cd build
-	cmake -D CMAKE_CXX_COMPILER=clang++ ..
+	cmake ..
 
 Then from the build directory you can run `make`.
 
