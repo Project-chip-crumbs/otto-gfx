@@ -1,8 +1,6 @@
-# Goals
+# Usage
 
 This library is designed to provide an easy-to-use immediate mode API backed by [OpenVG](https://www.khronos.org/openvg). It follows HTML5 canvas where possible.
-
-# Usage
 
 ## Building
 
