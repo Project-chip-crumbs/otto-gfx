@@ -9,7 +9,7 @@ include_directories(
   lib
   src)
 
-include_directories(SYSTEM /opt/vc/include) # VideoCore
+include_directories(SYSTEM ${VC_SDK}/include) # VideoCore
 
 file(GLOB src "src/*.cpp")
 
