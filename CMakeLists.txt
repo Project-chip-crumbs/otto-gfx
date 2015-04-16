@@ -12,5 +12,7 @@ include_directories(
 include_directories(SYSTEM ${VC_SDK}/include) # VideoCore
 
 file(GLOB src "src/*.cpp")
+file(GLOB includes "src/*.hpp")
 
-add_library(otto_gfx ${src})
+add_library(otto_gfx SHARED ${src})
+install ( FILES "${includes}" DESTINATION ${CMAKE_INSTALL_PREFIX}/include/otto-gfx )
