@@ -12,7 +12,10 @@ include_directories(
 include_directories(SYSTEM ${VC_SDK}/include) # VideoCore
 
 file(GLOB src "src/*.cpp")
-file(GLOB includes "src/*.hpp")
+file(GLOB includes
+  "src/*.hpp"
+  "deps/nanosvg/src/nanosvg.h"
+)
 
 add_library(otto_gfx SHARED ${src})
 install ( FILES "${includes}" DESTINATION ${CMAKE_INSTALL_PREFIX}/include/otto-gfx )
