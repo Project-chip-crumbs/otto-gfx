@@ -16,3 +16,4 @@ file(GLOB includes "src/*.hpp")
 
 add_library(otto_gfx SHARED ${src})
 install ( FILES "${includes}" DESTINATION ${CMAKE_INSTALL_PREFIX}/include/otto-gfx )
+install ( TARGETS otto_gfx EXPORT otto_gfx DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
