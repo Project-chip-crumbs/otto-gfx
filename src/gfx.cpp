@@ -1,12 +1,12 @@
 #include "gfx.hpp"
 #define GLM_FORCE_RADIANS 1
-#include "gtx/matrix_transform_2d.hpp"
+#include <glm/gtx/matrix_transform_2d.hpp>
 
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #define NANOSVG_IMPLEMENTATION
-#include "nanosvg.h"
+#include <nanosvg.h>
 
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"

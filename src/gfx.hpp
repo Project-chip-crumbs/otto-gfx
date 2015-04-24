@@ -4,8 +4,8 @@
 
 #include <string>
 
-#include "nanosvg.h"
-#include "glm.hpp"
+#include <nanosvg.h>
+#include <glm/glm.hpp>
 
 namespace otto {
 
